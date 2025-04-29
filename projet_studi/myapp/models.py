@@ -5,8 +5,8 @@ from datetime import datetime, timezone
 class Roles(models.Model):
     nom = models.CharField(max_length=100, unique=True)
     
-    def __str__(self):
-        return f"{self.nom}"
+    '''def __str__(self):
+        return f"{self.nom}"'''
     
 class Users(models.Model):
     nom = models.CharField(max_length=100)
@@ -16,8 +16,8 @@ class Users(models.Model):
     password = models.CharField(max_length=255)
     role = models.ForeignKey(Roles, on_delete=models.CASCADE)
     
-    def __str__(self):
-        return self.prenom + ' ' + self.nom + ' ' + self.mail
+    '''def __str__(self):
+        return self.prenom + ' ' + self.nom + ' ' + self.mail'''
     
     
     

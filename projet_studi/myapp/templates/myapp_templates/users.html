@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8">
+        <title>Affichage de tous les user</title>
+        <link rel="stylesheet" href="style.css">
+        <script src="script.js"></script>
+    </head>
+    <body>
+        <h1>Liste de tous les users</h1>
+        <ul>
+            {% for user in users %}
+            <li>
+                <a href="user/{{ user.pk }}">User {{user.id}} : {{user.prenom}} {{user.nom}} {{user.password}}</a>
+            </li>
+            {% endfor %}
+        </ul>
+        <p>
+            {% if users|length > 1 %}
+                Il y a {{ users|length }} utilisateurs
+            {% elif users|length == 1 %}
+                y'en a qu'un
+            {% else %}
+                ya personne
+            {% endif %}
+        </p>
+    </body>
+</html>
