@@ -1,5 +1,6 @@
 from django.db import models
 from datetime import datetime, timezone
+from django.contrib.auth.models import AbstractUser
 
 # Create your models here.
 '''class Roles(models.Model):
@@ -7,6 +8,8 @@ from datetime import datetime, timezone
     
     def __str__(self):
         return f"{self.nom}"
+        
+
     
 class Users(models.Model):
     nom = models.CharField(max_length=100)
@@ -19,7 +22,8 @@ class Users(models.Model):
     def __str__(self):
         return self.prenom + ' ' + self.nom + ' ' + self.mail'''
     
-    
+class User(AbstractUser):
+    key = models.CharField(max_length=255, unique=True, default='none')
     
 class Offres(models.Model):
     nom = models.CharField(max_length=255)
@@ -31,7 +35,7 @@ class Tickets(models.Model):
     key = models.CharField(max_length=255, unique=True) ## a verifier
     concat_key = models.CharField(max_length=255, unique=True) ## a verifier
     offre = models.ForeignKey(Offres, on_delete=models.CASCADE, related_name='liste_offres_user')
-    '''user = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='liste_tickets_user')'''
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='liste_tickets_user', default=1)
     ## a finir
 
 ## add class Panier ??
