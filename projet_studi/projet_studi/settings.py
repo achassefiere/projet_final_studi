@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-(qw7##r%-kr9n!lfp8c=k9%hbv+pqljusb8w6gvb0b*f0l&eu8'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -84,7 +84,7 @@ DATABASES = {
         },
         'NAME': 'projet_studi_db',
         'USER' : 'root',
-        'PASSWORD' : '',
+        'PASSWORD' : '123+Aze!', 
         'HOST' : 'localhost',
         'PORT' : '3306',
     }
