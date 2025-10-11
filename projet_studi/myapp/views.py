@@ -29,18 +29,22 @@ def login_view(request):
 
     return render(request, 'login.html', {'form': form, 'message': message})
 
-def signup_view(request):
-    if request.user.is_authenticated:
-        return redirect('login')
 
-    form = SignupForm(request.POST or None)
-    if request.method == 'POST':
+def signup_view(request):
+    if request.method == "POST":
+        form = SignupForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)  # Connexion automatique après inscription
+            login(request, user)
+            messages.success(request, "Votre compte a été créé avec succès")
             return redirect('host')
+        else:
+            messages.error(request, "Veuillez corriger les erreurs dans le formulaire.")
+    else:
+        form = SignupForm()
     
-    return render(request, 'signup.html', {'form': form})
+    return render(request, "signup.html", {"form": form})
+
 
 def logout_view(request):
     logout(request)
