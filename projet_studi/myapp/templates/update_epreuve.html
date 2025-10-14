@@ -1,79 +1,71 @@
 <!DOCTYPE html>
 <html lang="fr">
-    <head>
-        <meta charset="UTF-8">
-        <title>Accueil - Mon Site Django</title>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    </head>
+   {% include 'part/head.html' %}
     <body>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-            <div class="container-fluid">
-                <a class="navbar-brand" href="#">MonSite</a>
-            </div>
-        </nav>
+        {% include 'part/navbar.html' %}
         <div class="container mt-5 mb-5">
-        <div class="card shadow-lg">
-            <div class="card-header bg-warning text-dark">
-            <h3 class="mb-0">Modifier une épreuve</h3>
-            </div>
-
-            <div class="card-body">
-            {% if messages %}
-                {% for message in messages %}
-                <div class="alert alert-success">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-
-            <form method="post" novalidate>
-                {% csrf_token %}
-                {{ form.non_field_errors }}
-
-                <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label">Date</label>
-                    {{ form.date }}
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Heure</label>
-                    {{ form.heure }}
-                </div>
+            <div class="card shadow-lg">
+                <div class="card-header bg-warning text-dark">
+                <h3 class="mb-0">Modifier une épreuve</h3>
                 </div>
 
-                <div class="mb-3">
-                <label class="form-label d-block">Genre</label>
-                {% for radio in form.genre %}
-                    <div class="form-check form-check-inline">
-                    {{ radio.tag }}
-                    <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                <div class="card-body">
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-success">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {{ form.non_field_errors }}
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Date</label>
+                            {{ form.date }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Heure</label>
+                            {{ form.heure }}
+                        </div>
                     </div>
-                {% endfor %}
-                </div>
 
-                <div class="row mb-3">
-                <div class="col-md-6">
-                    <label class="form-label">Discipline</label>
-                    {{ form.discipline }}
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Compétition</label>
-                    {{ form.competition }}
-                </div>
-                </div>
+                    <div class="mb-3">
+                    <label class="form-label d-block">Genre</label>
+                    {% for radio in form.genre %}
+                        <div class="form-check form-check-inline">
+                        {{ radio.tag }}
+                        <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                        </div>
+                    {% endfor %}
+                    </div>
 
-                <div class="row mb-3">
-                <div class="col-md-4">
-                    <label class="form-label">Tarif (€)</label>
-                    {{ form.tarif }}
-                </div>
-                </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Discipline</label>
+                            {{ form.discipline }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Compétition</label>
+                            {{ form.competition }}
+                        </div>
+                    </div>
 
-                <div class="d-flex justify-content-end">
-                <button type="submit" class="btn btn-success">💾 Enregistrer les modifications</button>
-                <a href="{% url 'liste_epreuves' %}" class="btn btn-secondary ms-2">Retour</a>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Tarif (€)</label>
+                            {{ form.tarif }}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-success">💾 Enregistrer les modifications</button>
+                        <a href="{% url 'liste_epreuves' %}" class="btn btn-secondary ms-2">Retour</a>
+                    </div>
+                </form>
                 </div>
-            </form>
             </div>
-        </div>
         </div>
     </body>
 </html>

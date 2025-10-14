@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
-from .models import Epreuve, GENRE_CHOICES
+from .models import *
 
 User = get_user_model()
 
@@ -74,7 +74,10 @@ class SignupForm(forms.ModelForm):
 
 class CreateEpreuveForm(forms.ModelForm):
     
-    genre = forms.ChoiceField(choices=GENRE_CHOICES, widget=forms.RadioSelect)
+    genre = forms.ChoiceField(
+        choices=Epreuve.GENRE_CHOICES,  # attention ici
+        widget=forms.RadioSelect
+    )
 
     class Meta:
         model = Epreuve
@@ -96,3 +99,27 @@ class CreateEpreuveForm(forms.ModelForm):
                 'min': '0'
             }),
         }
+        
+class BuyTicketForm(forms.ModelForm):
+    # constante interne à la classe
+    QUANTITE_CHOICES = [
+        (1, "1 ticket"),
+        (2, "2 tickets"),
+        (4, "4 tickets"),
+    ]
+
+    quantite = forms.ChoiceField(
+        choices=QUANTITE_CHOICES,
+        label="Nombre de tickets",
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
+
+    class Meta:
+        model = Ticket
+        fields = ['quantite']
+
+    def clean_quantite(self):
+        quantite = int(self.cleaned_data.get('quantite'))
+        if quantite not in [1, 2, 4]:
+            raise forms.ValidationError("Vous pouvez acheter uniquement 1, 2 ou 4 tickets.")
+        return quantite

@@ -11,6 +11,8 @@ urlpatterns = [
     path('epreuves/creer/', views.create_epreuve, name='creer_epreuve'),
     path('epreuves/modifier/<int:epreuve_id>/', views.update_epreuve, name='modifier_epreuve'),
     path('epreuves/supprimer/<int:epreuve_id>/', views.delete_epreuve, name='supprimer_epreuve'),
+    path('epreuves/<int:epreuve_id>/acheter/', views.buy_ticket, name='acheter_ticket'),
+    path('tickets/', views.liste_tickets, name='liste_tickets'),
     path('users', views.all_users),
     path('user/<int:pk>', views.one_user)
 ]

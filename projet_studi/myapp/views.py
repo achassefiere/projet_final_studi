@@ -4,8 +4,7 @@ from django.template import loader
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.admin.views.decorators import staff_member_required
-from .forms import LoginForm, SignupForm, CreateEpreuveForm
-
+from .forms import *
 from .models import *
 
 def host_view(request: HttpRequest): # accueil du site
@@ -86,6 +85,44 @@ def delete_epreuve(request, epreuve_id):
         epreuve.delete()
         return redirect('liste_epreuves')  # ou nom de ta vue liste
     return redirect('liste_epreuves')
+
+
+def buy_ticket(request, epreuve_id):
+    epreuve = get_object_or_404(Epreuve, id=epreuve_id)
+
+    # Vérifie si l’utilisateur a déjà acheté un ticket pour cette épreuve
+    if Ticket.objects.filter(user=request.user, epreuve=epreuve).exists():
+        messages.warning(request, "Vous avez déjà acheté des tickets pour cette épreuve.")
+        return redirect('detail_epreuve', epreuve_id=epreuve.id)
+
+    if request.method == 'POST':
+        form = BuyTicketForm(request.POST)
+        if form.is_valid():
+            ticket = form.save(commit=False)
+            ticket.user = request.user
+            ticket.epreuve = epreuve
+            ticket.save()
+            messages.success(request, f"Achat réussi ! Total : {ticket.total} €")
+            return redirect('detail_epreuve', epreuve_id=epreuve.id)
+    else:
+        form = BuyTicketForm()
+
+    total = None
+    if request.method == 'POST' and form.is_valid():
+        total = form.cleaned_data['quantite'] * epreuve.tarif
+
+    context = {
+        'form': form,
+        'epreuve': epreuve,
+        'total': total,
+    }
+    return render(request, 'achat_ticket.html', context)
+
+def liste_tickets(request):
+    tickets = Ticket.objects.filter(user=request.user)
+    return render(request, 'list_tickets.html', {'tickets': tickets})
+
+
 
 def all_users(request: HttpRequest):
     users = User.objects.all()
