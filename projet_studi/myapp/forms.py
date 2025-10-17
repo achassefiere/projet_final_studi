@@ -81,7 +81,7 @@ class CreateEpreuveForm(forms.ModelForm):
 
     class Meta:
         model = Epreuve
-        fields = ['date', 'heure', 'genre', 'discipline', 'competition', 'tarif']
+        fields = ['date', 'heure', 'genre', 'discipline', 'competition', 'tarif', 'lieu']
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'heure': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
@@ -97,6 +97,10 @@ class CreateEpreuveForm(forms.ModelForm):
                 'class': 'form-control',
                 'step': '0.01',
                 'min': '0'
+            }),
+            'lieu': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ex : Stade de France, Piscine Olympique, etc.'
             }),
         }
         

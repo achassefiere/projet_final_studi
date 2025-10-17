@@ -58,7 +58,7 @@ def create_epreuve(request):
             return redirect('liste_epreuves')  # ou autre vue de ton choix
     else:
         form = CreateEpreuveForm()
-    return render(request, 'creer_epreuve.html', {'form': form})
+    return render(request, 'create_epreuve.html', {'form': form})
 
 def update_epreuve(request, epreuve_id):
     epreuve = get_object_or_404(Epreuve, id=epreuve_id)
