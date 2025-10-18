@@ -3,16 +3,15 @@ from . import views
 
 
 urlpatterns = [
-    path('', views.host_view, name='host'), # rien entre guillemet = l'URL par défaut du site
-    path('login/', views.login_view, name='login'),
-    path('signup/', views.signup_view, name='signup'),
-    path('logout/', views.logout_view, name='logout'),
-    path('epreuves/', views.list_epreuves, name='liste_epreuves'),
-    path('epreuves/creer/', views.create_epreuve, name='creer_epreuve'),
-    path('epreuves/modifier/<int:epreuve_id>/', views.update_epreuve, name='modifier_epreuve'),
-    path('epreuves/supprimer/<int:epreuve_id>/', views.delete_epreuve, name='supprimer_epreuve'),
-    path('epreuves/<int:epreuve_id>/acheter/', views.buy_ticket, name='acheter_ticket'),
+    path('', views.accueil_view, name='accueil'), # rien entre guillemet = l'URL par défaut du site
+    path('login/', views.connexion_view, name='connexion'),
+    path('signup/', views.inscription_view, name='inscription'),
+    path('logout/', views.deconnexion_view, name='deconnexion'),
+    path('epreuves/', views.liste_epreuves, name='liste_epreuves'),
+    path('epreuves/creer/', views.creer_epreuve, name='creer_epreuve'),
+    path('epreuves/modifier/<int:epreuve_id>/', views.editer_epreuve, name='editer_epreuve'),
+    path('epreuves/supprimer/<int:epreuve_id>/', views.supprimer_epreuve, name='supprimer_epreuve'),
+    path('epreuves/detail_epreuve/<int:epreuve_id>/', views.detail_epreuve, name='detail_epreuve'),
+    path('epreuves/acheter/<int:epreuve_id>/', views.acheter_ticket, name='acheter_ticket'),
     path('tickets/', views.liste_tickets, name='liste_tickets'),
-    path('users', views.all_users),
-    path('user/<int:pk>', views.one_user)
 ]
