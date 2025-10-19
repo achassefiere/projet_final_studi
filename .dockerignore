@@ -1,8 +1,9 @@
-# flyctl launch added from .gitignore
-**\**\__pycache__
-**\**\*.pyc
+# Ignorer les caches Python
+**/__pycache__/
+**/*.pyc
 
-# flyctl launch added from projet_studi\htmlcov\.gitignore
-# Created by coverage.py
-projet_studi\htmlcov\**\*
+# Ignorer coverage
+projet_studi/htmlcov/**
+
+# Ignorer le fichier fly.toml (optionnel)
 fly.toml
