@@ -28,4 +28,4 @@ COPY . .
 EXPOSE 8000
 
 # Lancer Django avec Gunicorn
-CMD ["gunicorn", "projet_studi.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "projet_final_studi.wsgi:application", "--bind", "0.0.0.0:8000"]
