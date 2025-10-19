@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+   {% include 'part/head.html' %}
+    <body>
+        {% include 'part/navbar.html' %}
+        <div class="container mt-5 mb-5">
+            <div class="card shadow-lg">
+                <div class="card-header bg-warning text-dark">
+                <h3 class="mb-0">{{epreuve.discipline}} - {{ epreuve.competition }} - ({{epreuve.genre}})</h3>
+                </div>
+
+                <div class="card-body">
+                    <form method="post" class="p-4 bg-light rounded shadow-sm">
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
+
+                        <!-- Titre de section -->
+                        <h4 class="mb-4 fw-bold border-bottom pb-2">Détails de l'épreuve</h4>
+
+                        <div class="row g-4 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-dark">📅 Date :</label>
+                                <div class="form-control-plaintext border rounded px-3 py-2 bg-white">
+                                    {{ epreuve.date }}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-dark">🕒 Heure :</label>
+                                <div class="form-control-plaintext border rounded px-3 py-2 bg-white">
+                                    {{ epreuve.heure }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-4 mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold text-dark">📍 Lieu :</label>
+                                <div class="form-control-plaintext border rounded px-3 py-2 bg-white">
+                                    {{ epreuve.lieu }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold text-dark">💶 Tarif (€) :</label>
+                                <div class="form-control-plaintext border rounded px-3 py-2 bg-white">
+                                    {{ epreuve.tarif }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end ms-2">
+                            <a href="{% url 'acheter_ticket' epreuve.id %}" class="btn btn-success btn-sm me-3">Acheter un ticket</a>
+                            <a href="{% url 'liste_epreuves' %}" class="btn btn-secondary btn-sm">⬅ Retour</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% include 'part/footer.html' %}
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    </body>
+</html>

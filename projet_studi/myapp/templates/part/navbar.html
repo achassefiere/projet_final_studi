@@ -1,0 +1,33 @@
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg bg-light shadow-sm">
+    <div class="container-fluid">
+        <!-- Titre du site -->
+        <a class="navbar-brand fw-bold me-auto ms-3" href="{% url 'accueil' %}">JO 2024</a>
+
+        <!-- Bouton toggle pour mobile -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Liens à droite -->
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <ul class="navbar-nav ms-auto d-flex align-items-center">
+                {% if user.is_authenticated %}
+                    <li class="nav-item fw-bold">
+                        <span class="navbar-brand me-3">Bonjour, {{ user.username }} ! </span>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'deconnexion' %}" class="btn btn-danger btn-sm">Se déconnecter</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item me-2">
+                        <a href="{% url 'connexion' %}" class="btn btn-primary btn-sm">Se connecter</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'inscription' %}" class="btn btn-success btn-sm">S'inscrire</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
