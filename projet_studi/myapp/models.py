@@ -6,11 +6,11 @@ from django.core.exceptions import ValidationError
 import hashlib
 
 
-
+# On utilise la classe AbstractUser fournie par Django
 class User(AbstractUser):
     pass
 
-
+# Creation de la table Epreuve et des fonction associées
 class Epreuve(models.Model):
     
     GENRE_CHOICES = [
@@ -30,6 +30,7 @@ class Epreuve(models.Model):
         return f"{self.discipline} - {self.competition} ({self.genre})"
     
 
+# Creation de la table Ticket et des fonction associées
 class Ticket(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -37,42 +38,38 @@ class Ticket(models.Model):
         related_name="tickets"
     )
     epreuve = models.ForeignKey(
-        "Epreuve",  # référence au modèle Epreuve
+        "Epreuve",
         on_delete=models.CASCADE,
         related_name="tickets"
     )
     code = models.CharField(
         max_length=64,
         unique=True,
-        editable=False, #ne peut pas être modifié dans un formulaire
-        default="temp" 
+        editable=False,
+        default="temp"
     )
     quantite = models.PositiveSmallIntegerField(default=1)
     date_achat = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ("user", "epreuve")  # un utilisateur ne peut acheter qu'une fois pour une même épreuve
+        unique_together = ("user", "epreuve")
 
     def __str__(self):
         return f"{self.user.username} - {self.epreuve.nom} ({self.quantite} ticket{'s' if self.quantite > 1 else ''})"
 
     def clean(self):
-        """Valide la quantité de tickets autorisée (1, 2 ou 4 uniquement)."""
+        """Valide la quantité autorisée."""
         if self.quantite not in [1, 2, 4]:
             raise ValidationError("Vous ne pouvez acheter que 1, 2 ou 4 tickets par épreuve.")
 
     @property
     def total(self):
-        """Calcule le total basé sur le prix de l'épreuve."""
+        """Retourne le montant total de l’achat."""
         return self.quantite * self.epreuve.tarif
-    
+
     def save(self, *args, **kwargs):
-        """
-        Génère automatiquement une clé unique à partir de user_id + epreuve_id.
-        Elle est hashée afin de garantir sa sécurité.
-        """
-        if not self.code_unique:
+        """Génère un code unique sécurisé."""
+        if self.code == "temp" or not self.code:
             raw_string = f"{self.user_id}-{self.epreuve_id}"
-            # On peut utiliser sha256 pour une empreinte stable et unique
-            self.code_unique = hashlib.sha256(raw_string.encode()).hexdigest()
+            self.code = hashlib.sha256(raw_string.encode()).hexdigest()
         super().save(*args, **kwargs)
