@@ -83,6 +83,21 @@ DATABASES = {
     'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
 }
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'OPTIONS' : {
+#             'init_command': 'SET default_storage_engine=INNODB',
+#         },
+#         'NAME': 'projet_studi_db',
+#         'USER' : 'root',
+#         'PASSWORD' : '123+Aze!', 
+#         'HOST' : 'localhost',
+#         'PORT' : '3306',
+#     }
+# }
+
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
