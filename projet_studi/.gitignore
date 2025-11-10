@@ -1,0 +1,19 @@
+
+# Compilations Python
+**/__pycache__
+**/*.pyc
+
+# Environnements & secrets
+.env
+
+
+# Fichiers système
+.DS_Store
+
+# Environnements virtuels
+venv/
+
+# Static files générés
+/staticfiles/
+/htmlcov/
+.coverage

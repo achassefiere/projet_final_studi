@@ -147,7 +147,7 @@ def acheter_ticket(request, epreuve_id):
             )
 
             # Redirige vers la page des billets
-            return redirect('liste_tickets.html')
+            return redirect('acheter_ticket.html')
 
     context = {
         'form': form,
