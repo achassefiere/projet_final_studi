@@ -15,4 +15,5 @@ urlpatterns = [
     path('epreuves/acheter/<int:epreuve_id>/', views.acheter_ticket, name='acheter_ticket'),
     path('tickets/', views.liste_tickets, name='liste_tickets'),
     path('tickets/admin/', views.liste_tickets_admin, name='liste_tickets_admin'),
+    path('tickets/admin/<int:ticket_id>/', views.supprimer_ticket, name='supprimer_ticket')
 ]

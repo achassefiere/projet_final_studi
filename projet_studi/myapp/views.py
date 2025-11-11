@@ -147,7 +147,7 @@ def acheter_ticket(request, epreuve_id):
             )
 
             # Redirige vers la page des billets
-            return redirect('acheter_ticket.html')
+            return redirect('liste_tickets')
 
     context = {
         'form': form,
@@ -185,3 +185,11 @@ def liste_tickets_admin(request):
     tickets = paginator.get_page(page_number)
 
     return render(request, 'liste_tickets_admin.html', {'tickets': tickets})
+
+# Suppression d'une épreuve
+def supprimer_ticket(request, ticket_id):
+    ticket = get_object_or_404(Ticket, id=ticket_id)
+    
+    if request.method == 'POST':
+        ticket.delete()  # supprime l'épreuve et tous les tickets liés
+        return redirect('liste_tickets_admin')

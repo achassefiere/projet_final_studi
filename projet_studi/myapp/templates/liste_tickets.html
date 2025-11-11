@@ -17,6 +17,7 @@
                 <th>Quantité</th>
                 <th>Prix total (€)</th>
                 <th>Date d’achat</th>
+                <th>QR Code</th>
                 <th></th>
             </tr>
         </thead>
@@ -32,7 +33,20 @@
             <td>{{ ticket.total }}</td>
             <td>{{ ticket.date_achat|date:"d/m/Y H:i" }}</td>
             <td>
-            <a href="" class="btn btn-primary btn-sm">Télécharger</a>
+              {% if ticket.qr_code %}
+                <img src="{{ ticket.qr_code.url }}" alt="QR Code du ticket" width="100" height="100" class="border rounded">
+              {% else %}
+                <span class="text-muted">Non généré</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if ticket.qr_code %}
+                <a href="{{ ticket.qr_code.url }}" download="ticket_{{ ticket.code }}.png" class="btn btn-primary btn-sm">
+                  Télécharger
+                </a>
+              {% else %}
+                <button class="btn btn-secondary btn-sm" disabled>Indisponible</button>
+              {% endif %}
             </td>
         </tr>
         {% empty %}

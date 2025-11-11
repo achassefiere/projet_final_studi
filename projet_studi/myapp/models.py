@@ -3,7 +3,10 @@ from django.conf import settings
 from datetime import datetime, timezone
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
+from django.core.files import File
 import hashlib
+import qrcode
+from io import BytesIO
 
 
 # On utilise la classe AbstractUser fournie par Django
@@ -50,6 +53,7 @@ class Ticket(models.Model):
     )
     quantite = models.PositiveSmallIntegerField(default=1)
     date_achat = models.DateTimeField(auto_now_add=True)
+    qr_code = models.ImageField(upload_to="qrcodes/", blank=True, null=True)
 
     class Meta:
         unique_together = ("user", "epreuve")
@@ -68,8 +72,28 @@ class Ticket(models.Model):
         return self.quantite * self.epreuve.tarif
 
     def save(self, *args, **kwargs):
+        
+        """Génère un code unique et un QR code associé."""
+        is_new = self.pk is None
+        
         """Génère un code unique sécurisé."""
         if self.code == "temp" or not self.code:
             raw_string = f"{self.user_id}-{self.epreuve_id}"
             self.code = hashlib.sha256(raw_string.encode()).hexdigest()
+            
         super().save(*args, **kwargs)
+        
+        if is_new or not self.qr_code:
+            # Le QR code contient par exemple une URL ou juste le code
+            qr_data = f"TICKET-{self.code}"
+            qr = qrcode.make(qr_data)
+
+            # Enregistre l'image dans un buffer
+            blob = BytesIO()
+            qr.save(blob, format="PNG")
+            qr_name = f"ticket_{self.id}_qrcode.png"
+
+            # Sauvegarde dans le champ ImageField
+            self.qr_code.save(qr_name, File(blob), save=False)
+            
+            super().save(*args, **kwargs)  # Sauvegarde finale avec QR code
