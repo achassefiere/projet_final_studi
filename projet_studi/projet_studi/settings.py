@@ -86,20 +86,20 @@ DATABASES = {
     'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
 }
 
-'''DATABASES = {
+
+DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
+        'NAME': config('DB_NAME', default='antoinec$default'),  # Nom de la base sur PythonAnywhere
+        'USER': config('DB_USER', default='antoinec'),          # Ton nom d'utilisateur PythonAnywhere
+        'PASSWORD': config('DB_PASSWORD', default='123+aze!'),  # Ton mot de passe MySQL
+        'HOST': config('DB_HOST', default='antoinec.mysql.pythonanywhere-services.com'),
+        'PORT': config('DB_PORT', default='3306'),
         'OPTIONS': {
             'init_command': 'SET default_storage_engine=INNODB',
         },
-        'NAME': config("DB_NAME"),
-        'USER': config("DB_USER"),
-        'PASSWORD': config("DB_PASSWORD"),
-        'HOST': config("DB_HOST"),
-        'PORT': config("DB_PORT"),
     }
-}'''
-
+}
 
 
 
