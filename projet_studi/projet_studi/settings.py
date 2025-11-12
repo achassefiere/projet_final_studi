@@ -26,9 +26,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config("DEBUG") == "True"
 
-ALLOWED_HOSTS = ['*']
+DEBUG = config("DEBUG", default=False, cast=bool)
+
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -82,6 +83,10 @@ WSGI_APPLICATION = 'projet_studi.wsgi.application'
 
 
 DATABASES = {
+    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+}
+
+'''DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'OPTIONS': {
@@ -93,7 +98,9 @@ DATABASES = {
         'HOST': config("DB_HOST"),
         'PORT': config("DB_PORT"),
     }
-}
+}'''
+
+
 
 
 
