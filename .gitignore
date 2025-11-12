@@ -12,6 +12,8 @@
 
 # Environnements virtuels
 venv/
+.venv/
+venv/
 
 # Static files générés
 /staticfiles/
