@@ -5,6 +5,3 @@ from .models import *
 
 admin.site.register(User)
 
-@admin.register(Epreuve)
-class EpreuveAdmin(admin.ModelAdmin):
-    list_display = ('date', 'heure', 'genre', 'discipline', 'competition', 'tarif')
