@@ -13,20 +13,17 @@ class User(AbstractUser):
     pass
 
 class Vehicule(models.Model):
-    
-    # MODE pour MODE DE COMMERCIALISATION
-    # valeurs stockées en base de données
+
+    # Mode de commercialisation
     MODE_VENTE = "vente"
     MODE_LOCATION = "location"
-    MODE_LES_DEUX = "les_deux"
 
-    # constantes
     MODE_CHOICES = [
         (MODE_VENTE, "Vente"),
         (MODE_LOCATION, "Location"),
-        (MODE_LES_DEUX, "Vente & Location"),
     ]
-    
+
+    # Statut
     STATUT_DISPONIBLE = "disponible"
     STATUT_LOUE = "loue"
     STATUT_VENDU = "vendu"
@@ -34,77 +31,94 @@ class Vehicule(models.Model):
 
     STATUT_CHOICES = [
         (STATUT_DISPONIBLE, "Disponible"),
-        (STATUT_LOUE, "Loué"),
+        (STATUT_LOUE, "Loue"),
         (STATUT_VENDU, "Vendu"),
         (STATUT_INDISPONIBLE, "Indisponible"),
     ]
-    
+
     marque = models.CharField("Marque", max_length=100)
     modele = models.CharField("Modèle", max_length=100)
     motorisation = models.CharField("Motorisation", max_length=50, blank=True)
     annee = models.PositiveSmallIntegerField("Année")
     kilometrage = models.PositiveIntegerField("Kilométrage")
-    numero_vin = models.CharField("N° VIN", max_length=17, unique=True) # VEHICLE IDENTIFICATION NUMBER
-    
+    numero_vin = models.CharField("N° VIN", max_length=17, unique=True)
+
     prix_vente = models.DecimalField(
         "Prix de vente",
-        max_digits=10, decimal_places=2,
-        null=True, blank=True,
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
         validators=[MinValueValidator(Decimal("0.01"))],
     )
+
     loyer_mensuel = models.DecimalField(
         "Loyer mensuel",
-        max_digits=8, decimal_places=2,
-        null=True, blank=True,
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
         validators=[MinValueValidator(Decimal("0.01"))],
     )
-    
-    mode = models.CharField("Mode", max_length=20, choices=MODE_CHOICES, default=MODE_VENTE)
-    statut = models.CharField("Statut", max_length=15, choices=STATUT_CHOICES, default=STATUT_DISPONIBLE)
-    photo = models.ImageField("Photo principale", upload_to="vehicules/", null=True, blank=True)
+
+    mode = models.CharField(
+        "Mode",
+        max_length=20,
+        choices=MODE_CHOICES,
+        default=MODE_VENTE,
+    )
+
+    statut = models.CharField(
+        "Statut",
+        max_length=15,
+        choices=STATUT_CHOICES,
+        default=STATUT_DISPONIBLE,
+    )
+
+    photo = models.ImageField(
+        "Photo principale",
+        upload_to="vehicules/",
+        null=True,
+        blank=True,
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
-        verbose_name = "Véhicule"
-        verbose_name_plural = "Véhicules"
+        verbose_name = "Vehicule"
+        verbose_name_plural = "Vehicules"
         ordering = ["-created_at"]
-        
+
     def clean(self):
         super().clean()
+
         if self.numero_vin and len(self.numero_vin) != 17:
             raise ValidationError({
                 "numero_vin": "Le VIN doit contenir exactement 17 caractères."
             })
- 
+
+        if self.mode == self.MODE_VENTE and not self.prix_vente:
+            raise ValidationError({
+                "prix_vente": "Le prix de vente est obligatoire pour un véhicule à vendre."
+            })
+
+        if self.mode == self.MODE_LOCATION and not self.loyer_mensuel:
+            raise ValidationError({
+                "loyer_mensuel": "Le loyer mensuel est obligatoire pour un véhicule en location."
+            })
+
     def __str__(self):
         return f"{self.marque} {self.modele} ({self.annee}) – {self.get_mode_display()}"
- 
+
     def switch_to_location(self):
-        """Basculer le véhicule en mode location."""
         self.mode = self.MODE_LOCATION
         self.save(update_fields=["mode", "updated_at"])
- 
+
     def switch_to_vente(self):
-        """Basculer le véhicule en mode vente."""
         self.mode = self.MODE_VENTE
         self.save(update_fields=["mode", "updated_at"])
 
-class VehiculePhoto(models.Model):
-    """Photos additionnelles d'un véhicule."""
- 
-    vehicule = models.ForeignKey(Vehicule, on_delete=models.CASCADE, related_name="photos")
-    image = models.ImageField("Image", upload_to="vehicules/galerie/")
-    caption = models.CharField("Légende", max_length=255, blank=True)
-    order = models.PositiveSmallIntegerField("Ordre", default=0)
- 
-    class Meta:
-        verbose_name = "Photo vehicule"
-        verbose_name_plural = "Photos vehicule"
-        ordering = ["order"]
- 
-    def __str__(self):
-        return f"Photo #{self.pk} – {self.vehicule}"
  
  
 # ──────────────────────────────────────────────
@@ -165,11 +179,11 @@ class Dossier(models.Model):
     ]
  
     STATUT_BROUILLON = "brouillon"
-    STATUT_SOUMIS = "submitted"
-    STATUT_EN_COURS = "under_review"
-    STATUT_APPROUVE = "approved"
-    STATUT_REJETE = "rejected"
-    STATUT_ANNULE = "cancelled"
+    STATUT_SOUMIS = "soumis"
+    STATUT_EN_COURS = "en_cours"
+    STATUT_APPROUVE = "approuve"
+    STATUT_REJETE = "rejete"
+    STATUT_ANNULE = "annule"
  
     STATUT_CHOICES = [
         (STATUT_BROUILLON, "Brouillon"),
@@ -356,27 +370,3 @@ class DossierStatusHistory(models.Model):
             f"Dossier #{self.dossier_id} : "
             f"{self.statut_precedent or '–'} → {self.nouveau_statut}"
         )
- 
- 
-# ──────────────────────────────────────────────
-# CONTRAT (généré après approbation)
-# ──────────────────────────────────────────────
- 
-class Contrat(models.Model):
-    """Contrat généré suite à l'approbation d'un dossier."""
- 
-    dossier = models.OneToOneField(Dossier, on_delete=models.PROTECT, related_name="contrat")
-    numero_contrat = models.CharField("N° contrat", max_length=50, unique=True)
-    date_debut = models.DateField("Date de début")
-    date_fin = models.DateField("Date de fin", null=True, blank=True)
-    signed_by_client = models.BooleanField("Signé par le client", default=False)
-    signed_at = models.DateTimeField("Signé le", null=True, blank=True)
-    document = models.FileField("Document contractuel", upload_to="contrats/", null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
- 
-    class Meta:
-        verbose_name = "Contrat"
-        verbose_name_plural = "Contrats"
- 
-    def __str__(self):
-        return f"Contrat {self.numero_contrat} – {self.dossier}"

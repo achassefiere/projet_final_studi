@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h2>Déposer un dossier</h2>
+
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+
+            <form method="post">
+                {% csrf_token %}
+
+                <!-- Véhicule -->
+                <div class="mb-3">
+                    <label class="form-label">Véhicule</label>
+                    {{ form.vehicule }}
+                </div>
+
+                <!-- Type dossier -->
+                <div class="mb-3">
+                    <label class="form-label">Type de dossier</label>
+                    {{ form.dossier_type }}
+                </div>
+
+                <!-- Durée location -->
+                <div class="mb-3">
+                    <label class="form-label">Durée (mois) - Location uniquement</label>
+                    {{ form.location_duration_months }}
+                </div>
+
+                <!-- Notes -->
+                <div class="mb-3">
+                    <label class="form-label">Notes</label>
+                    {{ form.client_notes }}
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    Envoyer le dossier
+                </button>
+
+                <a href="{% url 'vehicule_list' %}" class="btn btn-secondary">
+                    Retour
+                </a>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

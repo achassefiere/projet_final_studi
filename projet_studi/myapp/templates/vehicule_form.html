@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <div class="card shadow-sm">
+
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">
+                {% if vehicule %}
+                    Modifier le véhicule
+                {% else %}
+                    Créer un véhicule
+                {% endif %}
+            </h3>
+        </div>
+
+        <div class="card-body">
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <div class="row">
+
+                    <!-- Marque -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Marque</label>
+                        {{ form.marque }}
+                        {{ form.marque.errors }}
+                    </div>
+
+                    <!-- Modèle -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Modèle</label>
+                        {{ form.modele }}
+                        {{ form.modele.errors }}
+                    </div>
+
+                    <!-- Motorisation -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Motorisation</label>
+                        {{ form.motorisation }}
+                        {{ form.motorisation.errors }}
+                    </div>
+
+                    <!-- Année -->
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Année</label>
+                        {{ form.annee }}
+                        {{ form.annee.errors }}
+                    </div>
+
+                    <!-- Kilométrage -->
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Kilométrage</label>
+                        {{ form.kilometrage }}
+                        {{ form.kilometrage.errors }}
+                    </div>
+
+                    <!-- VIN -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Numéro VIN</label>
+                        {{ form.numero_vin }}
+                        {{ form.numero_vin.errors }}
+                    </div>
+
+                    <!-- Mode -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Mode</label>
+                        {{ form.mode }}
+                        {{ form.mode.errors }}
+                    </div>
+
+                    <!-- Prix vente -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Prix de vente</label>
+                        {{ form.prix_vente }}
+                        {{ form.prix_vente.errors }}
+                    </div>
+
+                    <!-- Loyer mensuel -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Loyer mensuel</label>
+                        {{ form.loyer_mensuel }}
+                        {{ form.loyer_mensuel.errors }}
+                    </div>
+
+                    <!-- Statut -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Statut</label>
+                        {{ form.statut }}
+                        {{ form.statut.errors }}
+                    </div>
+
+                    <!-- Photo -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Photo principale</label>
+
+                        {% if vehicule and vehicule.photo %}
+                            <div class="mb-2">
+                                <img src="{{ vehicule.photo.url }}"
+                                     class="img-thumbnail"
+                                     style="max-height: 150px;">
+                            </div>
+                        {% endif %}
+
+                        {{ form.photo }}
+                        {{ form.photo.errors }}
+                    </div>
+
+                </div>
+
+                <hr>
+
+                <div class="d-flex justify-content-between">
+
+                    <a href="{% url 'vehicule_list' %}" class="btn btn-secondary">
+                        Retour
+                    </a>
+
+                    <button type="submit" class="btn btn-success">
+                        {% if vehicule %}
+                            Modifier
+                        {% else %}
+                            Créer
+                        {% endif %}
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -56,12 +56,15 @@ class SignupForm(forms.ModelForm):
         return email
 
     # Validation des deux mots de passe s'ils sont identiques
-    def validate_password(self):
-        password1 = self.cleaned_data.get('password1')
-        password2 = self.cleaned_data.get('password2')
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get("password1")
+        password2 = cleaned_data.get("password2")
+
         if password1 and password2 and password1 != password2:
             raise ValidationError("Les deux mots de passe ne correspondent pas.")
-        return password2
+
+        return cleaned_data
     
     # Sauvegarde de l'utilisateur 
     def save(self, commit=True):
@@ -72,3 +75,49 @@ class SignupForm(forms.ModelForm):
         return user
         
 
+class VehiculeForm(forms.ModelForm):
+
+    class Meta:
+        model = Vehicule
+        fields = [
+            "marque",
+            "modele",
+            "motorisation",
+            "annee",
+            "kilometrage",
+            "numero_vin",
+            "mode",
+            "prix_vente",
+            "loyer_mensuel",
+            "statut",
+            "photo",
+        ]
+
+        widgets = {
+            "marque": forms.TextInput(attrs={"class": "form-control"}),
+            "modele": forms.TextInput(attrs={"class": "form-control"}),
+            "motorisation": forms.TextInput(attrs={"class": "form-control"}),
+            "annee": forms.NumberInput(attrs={"class": "form-control"}),
+            "kilometrage": forms.NumberInput(attrs={"class": "form-control"}),
+            "numero_vin": forms.TextInput(attrs={"class": "form-control"}),
+            "mode": forms.Select(attrs={"class": "form-select"}),
+            "prix_vente": forms.NumberInput(attrs={"class": "form-control"}),
+            "loyer_mensuel": forms.NumberInput(attrs={"class": "form-control"}),
+            "statut": forms.Select(attrs={"class": "form-select"}),
+            "photo": forms.ClearableFileInput(attrs={"class": "form-control"}),
+        }
+        
+class DossierForm(forms.ModelForm):
+    class Meta:
+        model = Dossier
+        fields = [
+            "vehicule",
+            "dossier_type",
+            "location_duration_months",
+            "client_notes",
+        ]
+        
+class DossierDocumentForm(forms.ModelForm):
+    class Meta:
+        model = DossierDocument
+        fields = ["document_type", "file", "label"]
