@@ -1,0 +1,8 @@
+<h2>Dossier #{{ dossier.pk }}</h2>
+
+<p>Client : {{ dossier.client.username }}</p>
+<p>Véhicule : {{ dossier.vehicule }}</p>
+<p>Statut : {{ dossier.get_statut_display }}</p>
+
+<a href="{% url 'dossier_valider' dossier.pk %}">Valider</a>
+<a href="{% url 'dossier_refuser' dossier.pk %}">Refuser</a>

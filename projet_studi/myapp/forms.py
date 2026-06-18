@@ -111,8 +111,6 @@ class DossierForm(forms.ModelForm):
     class Meta:
         model = Dossier
         fields = [
-            "vehicule",
-            "dossier_type",
             "location_duration_months",
             "client_notes",
         ]

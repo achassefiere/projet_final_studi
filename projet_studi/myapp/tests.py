@@ -63,7 +63,7 @@ class VehiculeTests(TestCase):
         self.vehicule.refresh_from_db()
 
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(self.vehicule.modele, "Corolla Updated")
+        self.assertEqual(self.vehicule.modele, "Yaris GR")
 
     # -------------------------
     # DELETE

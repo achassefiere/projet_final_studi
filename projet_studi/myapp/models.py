@@ -203,7 +203,7 @@ class Dossier(models.Model):
     )
     vehicule = models.ForeignKey(
         Vehicule,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         related_name="dossiers",
         verbose_name="Véhicule",
     )
@@ -252,41 +252,32 @@ class Dossier(models.Model):
         
     def clean(self):
         super().clean()
-        
-        if not self.dossier_type:
-            raise ValidationError({
-                "dossier_type": "Le type de dossier est obligatoire."
-            })
 
-        if not self.vehicule:
-            raise ValidationError({
-                "vehicule": "Un véhicule est obligatoire."
-            })
+        if not self.dossier_type or not self.vehicule:
+            return  # 🔥 ne crash pas ici
 
-        # Achat
+        mode = self.vehicule.mode
+
+        # 🔥 ACHAT
         if self.dossier_type == self.TYPE_ACHAT:
+            if mode != Vehicule.MODE_VENTE:
+                raise ValidationError({
+                    "vehicule": "Ce véhicule n'est pas disponible à l'achat."
+                })
 
             if self.location_duration_months:
                 raise ValidationError({
-                    "location_duration_months": "La durée n'est autorisée que pour une location."
+                    "location_duration_months": "Pas de durée pour un achat."
                 })
 
-            if self.vehicule.mode == Vehicule.MODE_LOCATION:
-                raise ValidationError({
-                    "vehicule": "Ce véhicule est uniquement disponible en location."
-                })
-
-        # Location
+        # 🔥 LOCATION
         elif self.dossier_type == self.TYPE_LOCATION:
-
-            if self.vehicule.mode == Vehicule.MODE_VENTE:
+            if mode != Vehicule.MODE_LOCATION:
                 raise ValidationError({
-                    "vehicule": "Ce véhicule est uniquement disponible à la vente."
+                    "vehicule": "Ce véhicule n'est pas disponible en location."
                 })
     
     def save(self, *args, **kwargs):
-        if not kwargs.get("raw", False):
-            self.full_clean()
         super().save(*args, **kwargs)
  
     def __str__(self):

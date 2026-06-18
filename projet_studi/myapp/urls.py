@@ -10,6 +10,7 @@ urlpatterns = [
     
     # URLS VEHICULES CRUD
     path("vehicules/", views.vehicule_list, name="vehicule_list"),
+    path("vehicules/<int:pk>/", views.vehicule_detail, name="vehicule_detail"),
     path("vehicules/create/", views.vehicule_create, name="vehicule_create"),
     path("vehicules/<int:pk>/update/", views.vehicule_update, name="vehicule_update"),
     path("vehicules/<int:pk>/delete/", views.vehicule_delete, name="vehicule_delete"),
@@ -20,7 +21,8 @@ urlpatterns = [
     path("dossiers/<int:dossier_id>/documents/", views.upload_document, name="upload_document"),
     
     # URLS DOSSIERS ADMIN
-    path("admin/dossiers/", views.admin_dossiers_list, name="admin_dossiers_list"),
-    path("admin/dossiers/<int:pk>/valider/", views.admin_dossier_valider, name="admin_dossier_valider"),
-    path("admin/dossiers/<int:pk>/refuser/", views.admin_dossier_refuser, name="admin_dossier_refuser"),
+    path("backoffice/dossiers/", views.dossier_list, name="dossier_list"),
+    path("backoffice/dossiers/<int:pk>/", views.dossier_detail, name="dossier_detail"),
+    path("backoffice/dossiers/<int:pk>/valider/", views.dossier_valider, name="dossier_valider"),
+    path("backoffice/dossiers/<int:pk>/refuser/", views.dossier_refuser, name="dossier_refuser"),
 ]

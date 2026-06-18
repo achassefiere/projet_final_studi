@@ -11,30 +11,55 @@
             <form method="post">
                 {% csrf_token %}
 
+                <!-- 🔴 ERREURS GLOBALES -->
+                {{ form.non_field_errors }}
+
+                <!-- 🔥 DEBUG (TEMPORAIRE - À SUPPRIMER APRÈS) -->
+                <div class="alert alert-warning">
+                    <strong>DEBUG FORM ERRORS :</strong>
+                    <pre>{{ form.errors }}</pre>
+                </div>
+
                 <!-- Véhicule -->
                 <div class="mb-3">
                     <label class="form-label">Véhicule</label>
-                    {{ form.vehicule }}
+                    <input type="text" class="form-control"
+                        value="{{ vehicule.marque }} {{ vehicule.modele }}">
                 </div>
 
-                <!-- Type dossier -->
+                <!-- Mode -->
+                <div class="alert alert-info">
+                    <strong>Mode :</strong> {{ vehicule.get_mode_display }}
+                </div>
+
+                <!-- Type dossier (info uniquement) -->
                 <div class="mb-3">
                     <label class="form-label">Type de dossier</label>
-                    {{ form.dossier_type }}
+
+                    {% if vehicule.mode == "vente" %}
+                        <input type="text" class="form-control" value="Achat">
+                    {% else %}
+                        <input type="text" class="form-control" value="Location longue durée">
+                    {% endif %}
                 </div>
 
-                <!-- Durée location -->
-                <div class="mb-3">
-                    <label class="form-label">Durée (mois) - Location uniquement</label>
-                    {{ form.location_duration_months }}
-                </div>
+                <!-- Durée (si location uniquement) -->
+                {% if vehicule.mode == "location" %}
+                    <div class="mb-3">
+                        <label class="form-label">Durée (mois)</label>
+                        {{ form.location_duration_months }}
+                        {{ form.location_duration_months.errors }}
+                    </div>
+                {% endif %}
 
                 <!-- Notes -->
                 <div class="mb-3">
                     <label class="form-label">Notes</label>
                     {{ form.client_notes }}
+                    {{ form.client_notes.errors }}
                 </div>
 
+                <!-- SUBMIT -->
                 <button type="submit" class="btn btn-primary">
                     Envoyer le dossier
                 </button>

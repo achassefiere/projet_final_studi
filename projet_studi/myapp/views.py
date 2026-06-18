@@ -10,6 +10,7 @@ from django.core.paginator import Paginator
 from .forms import *
 from .models import *
 from datetime import datetime
+from django.http import HttpResponse
 
 def is_admin(user):
     return user.is_staff
@@ -25,10 +26,9 @@ def home_view(request):
     if request.user.is_authenticated:
 
         if request.user.is_staff:
-            # admin voit les plus anciens dossiers aussi
-            dossiers_admin = Dossier.objects.all().order_by("created_at")[:10]
+            dossiers_admin = Dossier.objects.select_related("vehicule", "client") \
+                                           .order_by("-created_at")[:3]
         else:
-            # client voit uniquement ses dossiers
             dossiers_user = Dossier.objects.filter(client=request.user)
 
     return render(request, "accueil.html", {
@@ -77,6 +77,7 @@ def deconnexion_view(request):
     logout(request)
     return redirect('accueil')
 
+@login_required
 def vehicule_create(request):
     if request.method == "POST":
         form = VehiculeForm(request.POST, request.FILES)
@@ -86,23 +87,33 @@ def vehicule_create(request):
     else:
         form = VehiculeForm()
 
-    return render(request, "vehicules/vehicule_form.html", {
+    return render(request, "vehicule_form.html", {
         "form": form,
         "title": "Créer un véhicule"
     })
-
+    
+@login_required
 def vehicule_update(request, pk):
     vehicule = get_object_or_404(Vehicule, pk=pk)
 
     if request.method == "POST":
-        form = VehiculeForm(request.POST, request.FILES, instance=vehicule)
+        form = VehiculeForm(
+            request.POST,
+            request.FILES,
+            instance=vehicule
+        )
+
         if form.is_valid():
             form.save()
             return redirect("vehicule_list")
+
     else:
         form = VehiculeForm(instance=vehicule)
 
-    return render(request, "vehicules/vehicule_form.html", {"form": form})
+    return render(request, "vehicule_form.html", {
+        "form": form,
+        "vehicule": vehicule,
+    })
 
 def vehicule_delete(request, pk):
     vehicule = get_object_or_404(Vehicule, pk=pk)
@@ -111,18 +122,36 @@ def vehicule_delete(request, pk):
         vehicule.delete()
         return redirect("vehicule_list")
 
-    return render(request, "vehicules/vehicule_confirm_delete.html", {"vehicule": vehicule})
+    return render(request, "vehicule_confirm_delete.html", {"vehicule": vehicule})
 
 def vehicule_list(request):
-
+    
+    mode = request.GET.get("mode")
     vehicules = Vehicule.objects.all().order_by("-created_at")
+
+    if mode:
+        vehicules = vehicules.filter(mode=mode)
 
     paginator = Paginator(vehicules, 10)
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    return render(request, "vehicules/vehicule_list.html", {
-        "page_obj": page_obj
+    return render(request, "vehicule_list.html", {
+        "page_obj": page_obj,
+        "mode": mode
+    })
+
+def vehicule_detail(request, pk):
+    vehicule = get_object_or_404(Vehicule, pk=pk)
+    form = VehiculeForm(instance=vehicule)
+
+    for field in form.fields.values():
+        field.disabled = True
+
+    return render(request, "vehicule_detail.html", {
+        "form": form,
+        "vehicule": vehicule,
+        "readonly": True
     })
 
 @login_required
@@ -134,18 +163,24 @@ def dossier_create(request, vehicule_id):
 
         if form.is_valid():
             dossier = form.save(commit=False)
+
             dossier.client = request.user
             dossier.vehicule = vehicule
+
+            if vehicule.mode == Vehicule.MODE_VENTE:
+                dossier.dossier_type = Dossier.TYPE_ACHAT
+            else:
+                dossier.dossier_type = Dossier.TYPE_LOCATION
+
             dossier.save()
 
-            return redirect("mes_dossiers")
+            # ✅ BON NAME ICI
+            return redirect("upload_document", dossier_id=dossier.id)
 
     else:
-        form = DossierForm(initial={
-            "vehicule": vehicule
-        })
+        form = DossierForm()
 
-    return render(request, "dossiers/dossier_form.html", {
+    return render(request, "dossier_form.html", {
         "form": form,
         "vehicule": vehicule
     })
@@ -154,13 +189,18 @@ def dossier_create(request, vehicule_id):
 def mes_dossiers(request):
     dossiers = Dossier.objects.filter(client=request.user)
 
-    return render(request, "dossiers/mes_dossiers.html", {
+    return render(request, "mes_dossiers.html", {
         "dossiers": dossiers
     })
 
+
 @login_required
 def upload_document(request, dossier_id):
-    dossier = get_object_or_404(Dossier, pk=dossier_id)
+    dossier = get_object_or_404(
+        Dossier,
+        pk=dossier_id,
+        client=request.user  # 🔥 sécurité + évite crash
+    )
 
     if request.method == "POST":
         form = DossierDocumentForm(request.POST, request.FILES)
@@ -172,16 +212,27 @@ def upload_document(request, dossier_id):
 
             return redirect("mes_dossiers")
 
+        else:
+            print(form.errors)  # debug
+
     else:
         form = DossierDocumentForm()
 
-    return render(request, "dossiers/upload_document.html", {
+    return render(request, "document_upload.html", {
         "form": form,
         "dossier": dossier
     })
     
+@login_required
+def dossier_detail(request, pk):
+    dossier = get_object_or_404(Dossier, pk=pk)
+
+    return render(request, "dossier_detail.html", {
+        "dossier": dossier
+    })
+    
 @user_passes_test(is_admin)
-def admin_dossiers_list(request):
+def dossier_list(request):
 
     statut = request.GET.get("statut")
 
@@ -195,13 +246,13 @@ def admin_dossiers_list(request):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    return render(request, "admin/dossiers_list.html", {
+    return render(request, "dossier_list.html", {
         "page_obj": page_obj,
         "statut": statut
     })
 
 @user_passes_test(is_admin)
-def admin_dossier_valider(request, pk):
+def dossier_valider(request, pk):
 
     dossier = get_object_or_404(Dossier, pk=pk)
 
@@ -213,7 +264,7 @@ def admin_dossier_valider(request, pk):
     return redirect("admin_dossiers_list")
 
 @user_passes_test(is_admin)
-def admin_dossier_refuser(request, pk):
+def dossier_refuser(request, pk):
 
     dossier = get_object_or_404(Dossier, pk=pk)
 

@@ -1,58 +1,51 @@
 {% extends "base.html" %}
 
+{% block title %}Liste des véhicules{% endblock %}
+
 {% block content %}
+
 <div class="container mt-4">
 
     <!-- HEADER -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2>Liste des véhicules</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>🚗 Liste des véhicules</h2>
 
-        <a href="{% url 'vehicule_create' %}" class="btn btn-primary">
-            + Ajouter un véhicule
-        </a>
+        {% if user.is_authenticated and user.is_staff %}
+            <a href="{% url 'vehicule_create' %}" class="btn btn-primary">
+                + Ajouter un véhicule
+            </a>
+        {% endif %}
     </div>
 
+    <!-- FILTRE -->
+    <form method="get" class="mb-4">
+        <div class="row g-2 align-items-end">
+
+            <div class="col-md-3">
+                <label class="form-label">Mode</label>
+                <select name="mode" class="form-select">
+                    <option value="">Tous</option>
+                    <option value="vente" {% if mode == "vente" %}selected{% endif %}>Vente</option>
+                    <option value="location" {% if mode == "location" %}selected{% endif %}>Location</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    Filtrer
+                </button>
+            </div>
+
+        </div>
+    </form>
+
+    <!-- TABLE -->
     <div class="card shadow-sm">
+        <div class="card-body p-0">
 
-        <div class="card-body">
-
-            <!-- FILTRE -->
-            <form method="get" class="mb-3">
-
-                <div class="row align-items-end">
-
-                    <div class="col-md-3">
-                        <label class="form-label">Filtrer par mode</label>
-
-                        <select name="mode" class="form-select">
-                            <option value="">Tous</option>
-
-                            <option value="vente"
-                                {% if mode == "vente" %}selected{% endif %}>
-                                Vente
-                            </option>
-
-                            <option value="location"
-                                {% if mode == "location" %}selected{% endif %}>
-                                Location
-                            </option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary">
-                            Filtrer
-                        </button>
-                    </div>
-
-                </div>
-
-            </form>
-
-            <!-- TABLE -->
             <div class="table-responsive">
 
-                <table class="table table-striped align-middle">
+                <table class="table table-striped mb-0">
 
                     <thead class="table-dark">
                         <tr>
@@ -69,35 +62,46 @@
                     <tbody>
 
                         {% for vehicule in page_obj %}
-                        <tr>
-                            <td>{{ vehicule.marque }}</td>
-                            <td>{{ vehicule.modele }}</td>
-                            <td>{{ vehicule.annee }}</td>
-                            <td>{{ vehicule.kilometrage }} km</td>
-                            <td>{{ vehicule.get_mode_display }}</td>
-                            <td>{{ vehicule.get_statut_display }}</td>
+                            <tr>
+                                <td>{{ vehicule.marque }}</td>
+                                <td>{{ vehicule.modele }}</td>
+                                <td>{{ vehicule.annee }}</td>
+                                <td>{{ vehicule.kilometrage }} km</td>
+                                <td>{{ vehicule.get_mode_display }}</td>
+                                <td>{{ vehicule.get_statut_display }}</td>
 
-                            <td class="text-end">
+                                <td class="text-end">
 
-                                <a href="{% url 'vehicule_update' vehicule.pk %}"
-                                   class="btn btn-sm btn-warning">
-                                    Modifier
-                                </a>
+                                    <!-- 🔵 Tout le monde peut voir -->
+                                    <a href="{% url 'vehicule_detail' vehicule.pk %}"
+                                       class="btn btn-sm btn-outline-primary">
+                                        Voir
+                                    </a>
 
-                                <a href="{% url 'vehicule_delete' vehicule.pk %}"
-                                   class="btn btn-sm btn-danger">
-                                    Supprimer
-                                </a>
+                                    <!-- 🔴 Seulement staff -->
+                                    {% if user.is_authenticated and user.is_staff %}
 
-                            </td>
-                        </tr>
+                                        <a href="{% url 'vehicule_update' vehicule.pk %}"
+                                           class="btn btn-sm btn-warning">
+                                            Modifier
+                                        </a>
+
+                                        <a href="{% url 'vehicule_delete' vehicule.pk %}"
+                                           class="btn btn-sm btn-danger">
+                                            Supprimer
+                                        </a>
+
+                                    {% endif %}
+
+                                </td>
+                            </tr>
 
                         {% empty %}
-                        <tr>
-                            <td colspan="7" class="text-center p-4">
-                                Aucun véhicule trouvé
-                            </td>
-                        </tr>
+                            <tr>
+                                <td colspan="7" class="text-center p-4 text-muted">
+                                    Aucun véhicule trouvé
+                                </td>
+                            </tr>
                         {% endfor %}
 
                     </tbody>
@@ -145,4 +149,5 @@
     </div>
 
 </div>
+
 {% endblock %}
