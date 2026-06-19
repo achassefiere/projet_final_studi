@@ -15,16 +15,20 @@
         <p class="lead">
             Achetez ou louez des véhicules d'occasion en toute simplicité
         </p>
-
-        <a href="{% url 'vehicule_list' %}" class="btn btn-primary mt-3">
-            Voir les véhicules
-        </a>
     </div>
 
     <hr>
 
     <!-- 🚗 VEHICULES RECENTS -->
-    <h2 class="mt-4">🚗 Véhicules récents</h2>
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <h2>🚗 Véhicules récents</h2>
+
+        {% if user.is_authenticated and user.is_staff %}
+            <a href="{% url 'vehicule_list' %}" class="btn btn-primary btn-sm">
+                ⚙️ Gérer véhicules
+            </a>
+        {% endif %}
+    </div>
 
     {% if vehicules_recents %}
         <div class="row mt-3">
@@ -81,15 +85,23 @@
     {% if user.is_authenticated %}
 
     <!-- 📁 DOSSIERS -->
-    <h2 class="mt-4">📁 Dossiers</h2>
+    <div class="d-flex justify-content-between align-items-center mt-4">
+        <h2>📁 Dossiers</h2>
+
+        {% if user.is_authenticated and user.is_staff %}
+            <a href="{% url 'dossier_list' %}" class="btn btn-warning btn-sm">
+                ⚙️ Gérer dossiers
+            </a>
+        {% else %}
+            <a href="{% url 'mes_dossiers' %}" class="btn btn-primary btn-sm">
+                📁 Mes dossiers
+            </a>
+        {% endif %}
+    </div>
 
     {% if user.is_staff %}
 
         {% if dossiers_admin %}
-            <div class="alert alert-warning mt-3">
-                ⚠️ Administration des dossiers
-            </div>
-
             <div class="row mt-3">
 
                 {% for dossier in dossiers_admin %}
@@ -191,45 +203,6 @@
     {% endif %}
 
 {% endif %}
-
-    <hr>
-
-    <!-- ⚡ ACTIONS -->
-    <div class="text-center mt-4">
-
-        {% if user.is_authenticated %}
-
-            {% if user.is_staff %}
-
-                <a href="{% url 'vehicule_list' %}" class="btn btn-primary">
-                    🚗 Véhicules
-                </a>
-
-                <a href="{% url 'vehicule_create' %}" class="btn btn-success">
-                    ➕ Ajouter
-                </a>
-
-                <a href="{% url 'dossier_list' %}" class="btn btn-secondary">
-                    📁 Back-office
-                </a>
-
-                <a href="{% url 'admin:index' %}" class="btn btn-warning">
-                    ⚙️ Admin
-                </a>
-
-            {% else %}
-
-                <a href="{% url 'mes_dossiers' %}" class="btn btn-primary">
-                    📁 Mes dossiers
-                </a>
-
-            {% endif %}
-
-        {% else %}
-
-        {% endif %}
-
-    </div>
 
 </div>
 

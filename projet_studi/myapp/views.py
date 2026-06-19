@@ -1,3 +1,4 @@
+import zipfile, logging
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpRequest, HttpResponse, Http404
 from django.template import loader
@@ -10,7 +11,10 @@ from django.core.paginator import Paginator
 from .forms import *
 from .models import *
 from datetime import datetime
-from django.http import HttpResponse
+from io import BytesIO
+from .services import *
+
+logger = logging.getLogger(__name__)
 
 def is_admin(user):
     return user.is_staff
@@ -156,26 +160,72 @@ def vehicule_detail(request, pk):
 
 @login_required
 def dossier_create(request, vehicule_id):
+
     vehicule = get_object_or_404(Vehicule, pk=vehicule_id)
 
+    # 🔒 sécurité : véhicule disponible
+    if vehicule.statut != Vehicule.STATUT_DISPONIBLE:
+        return render(request, "error.html", {
+            "message": "Ce véhicule n'est plus disponible."
+        })
+
     if request.method == "POST":
+
         form = DossierForm(request.POST)
 
         if form.is_valid():
-            dossier = form.save(commit=False)
 
-            dossier.client = request.user
-            dossier.vehicule = vehicule
+            try:
+                dossier = form.save(commit=False)
 
-            if vehicule.mode == Vehicule.MODE_VENTE:
-                dossier.dossier_type = Dossier.TYPE_ACHAT
-            else:
-                dossier.dossier_type = Dossier.TYPE_LOCATION
+                dossier.client = request.user
+                dossier.vehicule = vehicule
 
-            dossier.save()
+                # 📌 statut par défaut
+                dossier.statut = Dossier.STATUT_SOUMIS
+                dossier.submitted_at = timezone.now()
 
-            # ✅ BON NAME ICI
-            return redirect("upload_document", dossier_id=dossier.id)
+                dossier.save()
+                form.save_m2m()  # options location (ManyToMany)
+
+                # 🔔 NOTIFICATION CLIENT
+                Notification.objects.create(
+                    user=request.user,
+                    title="Dossier envoyé",
+                    message="Votre dossier a été soumis avec succès.",
+                    type="success"
+                )
+
+                # 🔔 NOTIFICATION ADMIN
+                from django.contrib.auth import get_user_model
+                User = get_user_model()
+
+                for admin in User.objects.filter(is_staff=True):
+                    Notification.objects.create(
+                        user=admin,
+                        title="Nouveau dossier",
+                        message=f"Un nouveau dossier a été créé pour {vehicule}",
+                        type="info"
+                    )
+
+                # 🚀 REDIRECTION CORRIGÉE (IMPORTANT)
+                return redirect("upload_document", dossier_id=dossier.id)
+
+            except Exception as e:
+
+                logger.error(f"Erreur création dossier: {e}")
+
+                Notification.objects.create(
+                    user=request.user,
+                    title="Erreur",
+                    message="Une erreur est survenue lors de la création du dossier.",
+                    type="error"
+                )
+
+                return render(request, "dossier_form.html", {
+                    "form": form,
+                    "vehicule": vehicule
+                })
 
     else:
         form = DossierForm()
@@ -196,32 +246,64 @@ def mes_dossiers(request):
 
 @login_required
 def upload_document(request, dossier_id):
-    dossier = get_object_or_404(
-        Dossier,
-        pk=dossier_id,
-        client=request.user  # 🔥 sécurité + évite crash
-    )
+
+    dossier = get_object_or_404(Dossier, pk=dossier_id)
+    documents = dossier.documents.all()
 
     if request.method == "POST":
+
         form = DossierDocumentForm(request.POST, request.FILES)
 
         if form.is_valid():
-            doc = form.save(commit=False)
-            doc.dossier = dossier
-            doc.save()
 
-            return redirect("mes_dossiers")
+            document_type = form.cleaned_data["document_type"]
 
-        else:
-            print(form.errors)  # debug
+            # 🔒 limite 1 type par dossier
+            if documents.filter(document_type=document_type).exists():
+                form.add_error("document_type", "Ce type de document existe déjà.")
+
+            # 🔒 max 5 documents
+            elif documents.count() >= 5:
+                form.add_error(None, "Maximum 5 documents atteints.")
+
+            else:
+                doc = form.save(commit=False)
+                doc.dossier = dossier   # 🔥 liaison obligatoire
+                doc.save()
+                
+                print("DOC ID:", doc.id)
+                print("DOSSIER ID:", doc.dossier_id)
+                print("DOSSIER OBJ:", dossier.id)
+
+                return redirect("upload_document", dossier_id=dossier.pk)
 
     else:
         form = DossierDocumentForm()
 
-    return render(request, "document_upload.html", {
+    return render(request, "upload_document.html", {
         "form": form,
-        "dossier": dossier
+        "dossier": dossier,
+        "documents": documents,
     })
+    
+@login_required
+def document_valider(request, pk):
+
+    dossier = get_object_or_404(Dossier, pk=pk)
+
+    # 🔒 sécurité accès
+    if request.user != dossier.client and not request.user.is_staff:
+        return redirect("accueil")
+
+    # 📎 vérifie documents liés au dossier
+    if not dossier.documents.exists():
+        return redirect("upload_document", dossier_id=dossier.pk)
+
+    # 🔥 validation
+    dossier.statut = Dossier.STATUT_SOUMIS
+    dossier.save()
+
+    return redirect("mes_dossiers")
     
 @login_required
 def dossier_detail(request, pk):
@@ -232,8 +314,12 @@ def dossier_detail(request, pk):
     if not request.user.is_staff and dossier.client != request.user:
         return redirect("accueil")
 
+    # 📎 récupération des documents liés
+    documents = dossier.documents.all()
+
     return render(request, "dossier_detail.html", {
-        "dossier": dossier
+        "dossier": dossier,
+        "documents": documents
     })
     
 @user_passes_test(is_admin)
@@ -261,12 +347,22 @@ def dossier_valider(request, pk):
 
     dossier = get_object_or_404(Dossier, pk=pk)
 
+    # 🔥 Mise à jour dossier
     dossier.statut = Dossier.STATUT_APPROUVE
     dossier.decided_at = timezone.now()
     dossier.reviewed_by = request.user
     dossier.save()
 
+    # 🚗 mise à jour véhicule (disponible / indisponible)
     update_vehicule_status(dossier.vehicule)
+
+    # 🔔 NOTIFICATION CLIENT
+    Notification.objects.create(
+        user=dossier.client,
+        title="Dossier approuvé 🎉",
+        message="Votre dossier a été validé avec succès.",
+        type="success"
+    )
 
     return redirect("dossier_list")
 
@@ -275,12 +371,22 @@ def dossier_refuser(request, pk):
 
     dossier = get_object_or_404(Dossier, pk=pk)
 
+    # 🔥 Mise à jour dossier
     dossier.statut = Dossier.STATUT_REJETE
     dossier.decided_at = timezone.now()
     dossier.reviewed_by = request.user
     dossier.save()
-    
+
+    # 🚗 mise à jour véhicule
     update_vehicule_status(dossier.vehicule)
+
+    # 🔔 NOTIFICATION CLIENT
+    Notification.objects.create(
+        user=dossier.client,
+        title="Dossier refusé",
+        message="Votre dossier a été refusé.",
+        type="error"
+    )
 
     return redirect("dossier_list")
 
@@ -289,7 +395,7 @@ def dossier_delete(request, pk):
 
     dossier = get_object_or_404(Dossier, pk=pk)
 
-    # 🔒 sécurité : client ou admin seulement
+    # 🔒 sécurité
     if request.user != dossier.client and not request.user.is_staff:
         return redirect("accueil")
 
@@ -298,7 +404,8 @@ def dossier_delete(request, pk):
     if request.method == "POST":
         dossier.delete()
 
-        # 🔥 recalcul statut véhicule après suppression
+        # 🔥 recalcul statut véhicule
+        from .services import update_vehicule_status
         update_vehicule_status(vehicule)
 
         return redirect("mes_dossiers")
@@ -306,20 +413,31 @@ def dossier_delete(request, pk):
     return render(request, "dossier_confirm_delete.html", {
         "dossier": dossier
     })
+    
+@login_required
+def download_dossier(request, dossier_id):
 
-def update_vehicule_status(vehicule):
-    """
-    Met à jour le statut du véhicule selon les dossiers approuvés.
-    """
+    dossier = get_object_or_404(Dossier, pk=dossier_id)
 
-    has_approved = Dossier.objects.filter(
-        vehicule=vehicule,
-        statut=Dossier.STATUT_APPROUVE
-    ).exists()
+    # sécurité : client ou staff uniquement
+    if request.user != dossier.client and not request.user.is_staff:
+        return HttpResponse("Accès interdit", status=403)
 
-    if has_approved:
-        vehicule.statut = Vehicule.STATUT_INDISPONIBLE
-    else:
-        vehicule.statut = Vehicule.STATUT_DISPONIBLE
+    buffer = BytesIO()
 
-    vehicule.save(update_fields=["statut"])
+    with zipfile.ZipFile(buffer, "w") as zip_file:
+
+        for doc in dossier.documents.all():
+
+            if doc.file:
+                zip_file.writestr(
+                    doc.file.name.split("/")[-1],
+                    doc.file.read()
+                )
+
+    buffer.seek(0)
+
+    response = HttpResponse(buffer, content_type="application/zip")
+    response["Content-Disposition"] = f'attachment; filename="dossier_{dossier.id}.zip"'
+
+    return response

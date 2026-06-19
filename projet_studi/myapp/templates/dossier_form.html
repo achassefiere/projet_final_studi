@@ -11,36 +11,21 @@
             <form method="post">
                 {% csrf_token %}
 
-                <!-- 🔴 ERREURS GLOBALES -->
-                {{ form.non_field_errors }}
-
-                <!-- 🔥 DEBUG (TEMPORAIRE - À SUPPRIMER APRÈS) -->
-                <div class="alert alert-warning">
-                    <strong>DEBUG FORM ERRORS :</strong>
-                    <pre>{{ form.errors }}</pre>
-                </div>
-
                 <!-- Véhicule -->
                 <div class="mb-3">
                     <label class="form-label">Véhicule</label>
-                    <input type="text" class="form-control"
-                        value="{{ vehicule.marque }} {{ vehicule.modele }}">
-                </div>
 
-                <!-- Mode -->
-                <div class="alert alert-info">
-                    <strong>Mode :</strong> {{ vehicule.get_mode_display }}
+                    <div class="form-control bg-light">
+                        {{ vehicule.marque }} {{ vehicule.modele }}
+                    </div>
                 </div>
 
                 <!-- Type dossier (info uniquement) -->
                 <div class="mb-3">
-                    <label class="form-label">Type de dossier</label>
-
-                    {% if vehicule.mode == "vente" %}
-                        <input type="text" class="form-control" value="Achat">
-                    {% else %}
-                        <input type="text" class="form-control" value="Location longue durée">
-                    {% endif %}
+                    <label class="form-label">Mode</label>
+                    <div class="form-control bg-light">
+                        {{ vehicule.get_mode_display }}
+                    </div>
                 </div>
 
                 <!-- Durée (si location uniquement) -->

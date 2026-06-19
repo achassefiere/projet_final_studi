@@ -307,10 +307,16 @@ class DossierDocument(models.Model):
         (TYPE_AUTRE, "Autre"),
     ]
  
-    dossier = models.ForeignKey(Dossier, on_delete=models.CASCADE, related_name="documents")
-    document_type = models.CharField("Type de document", max_length=20, choices=TYPE_CHOICES)
-    file = models.FileField("Fichier", upload_to="dossiers/documents/")
-    label = models.CharField("Nom du fichier", max_length=255, blank=True)
+    
+    dossier = models.ForeignKey(
+        Dossier,
+        related_name="documents",
+        on_delete=models.CASCADE
+    )
+
+    document_type = models.CharField(max_length=50, choices=TYPE_CHOICES)
+    file = models.FileField(upload_to="documents/")
+    label = models.CharField(max_length=255, blank=True, null=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
  
     class Meta:
@@ -351,3 +357,35 @@ class DossierStatusHistory(models.Model):
             f"Dossier #{self.dossier_id} : "
             f"{self.statut_precedent or '–'} → {self.nouveau_statut}"
         )
+        
+
+class Notification(models.Model):
+
+    TYPE_INFO = "info"
+    TYPE_SUCCES = "succes"
+    TYPE_AVERTISSEMENT = "avertissement"
+    TYPE_ERREUR = "erreur"
+
+    TYPE_CHOICES = [
+        (TYPE_INFO, "Information"),
+        (TYPE_SUCCES, "Succès"),
+        (TYPE_AVERTISSEMENT, "Avertissement"),
+        (TYPE_ERREUR, "Erreur"),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notifications"
+    )
+
+    title = models.CharField(max_length=255)
+    message = models.TextField(blank=True)
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES, default=TYPE_INFO)
+
+    is_read = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]

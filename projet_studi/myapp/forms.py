@@ -116,6 +116,30 @@ class DossierForm(forms.ModelForm):
         ]
         
 class DossierDocumentForm(forms.ModelForm):
+
     class Meta:
         model = DossierDocument
         fields = ["document_type", "file", "label"]
+
+    def __init__(self, *args, **kwargs):
+        dossier = kwargs.pop("dossier", None)
+        super().__init__(*args, **kwargs)
+
+        base_choices = DossierDocument.TYPE_CHOICES
+
+        if dossier:
+            already_uploaded = dossier.documents.values_list(
+                "document_type",
+                flat=True
+            )
+
+            filtered = [
+                c for c in base_choices
+                if c[0] not in already_uploaded
+            ]
+            
+            print("DEBUG already_uploaded:", list(already_uploaded))
+            print("DEBUG choices:", filtered)
+
+            # 🔥 IMPORTANT : jamais vide
+            self.fields["document_type"].choices = filtered or base_choices

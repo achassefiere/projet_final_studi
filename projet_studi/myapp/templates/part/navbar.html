@@ -1,33 +1,99 @@
-<!-- Navbar -->
 <nav class="navbar navbar-expand-lg bg-light shadow-sm">
     <div class="container-fluid">
-        <!-- Titre du site -->
-        <a class="navbar-brand fw-bold me-auto ms-3" href="{% url 'accueil' %}">M-Motors</a>
 
-        <!-- Bouton toggle pour mobile -->
+        <!-- Brand -->
+        <a class="navbar-brand fw-bold ms-3" href="{% url 'accueil' %}">
+            M-Motors
+        </a>
+
+        <!-- Toggle mobile -->
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
 
-        <!-- Liens à droite -->
         <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-            <ul class="navbar-nav ms-auto d-flex align-items-center">
+
+            <ul class="navbar-nav ms-auto d-flex align-items-center gap-2">
+
                 {% if user.is_authenticated %}
-                    <li class="nav-item fw-bold">
-                        <span class="navbar-brand me-3">Bonjour, {{ user.username }} ! </span>
-                    </li>
+
+                    <!-- 🔵 CLIENT -->
+                    {% if not user.is_staff %}
+
+                        <li class="nav-item">
+                            <a href="{% url 'vehicule_list' %}" class="btn btn-outline-primary btn-sm">
+                                🚗 Véhicules
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{% url 'mes_dossiers' %}" class="btn btn-primary btn-sm">
+                                📁 Mes dossiers
+                            </a>
+                        </li>
+
+                    {% endif %}
+
+                    <!-- 🔴 ADMIN -->
+                    {% if user.is_staff %}
+
+                        <li class="nav-item">
+                            <a href="{% url 'vehicule_list' %}" class="btn btn-outline-primary btn-sm">
+                                🚗 Véhicules
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{% url 'vehicule_create' %}" class="btn btn-success btn-sm">
+                                ➕ Ajouter
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{% url 'dossier_list' %}" class="btn btn-secondary btn-sm">
+                                📁 Back-office
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="{% url 'admin:index' %}" class="btn btn-warning btn-sm">
+                                ⚙️ Admin
+                            </a>
+                        </li>
+
+                    {% endif %}
+
+                    <!-- USER -->
                     <li class="nav-item">
-                        <a href="{% url 'deconnexion' %}" class="btn btn-danger btn-sm">Se déconnecter</a>
+                        <span class="navbar-text fw-bold me-2">
+                            Bonjour, {{ user.username }}
+                        </span>
                     </li>
+
+                    <li class="nav-item">
+                        <a href="{% url 'deconnexion' %}" class="btn btn-danger btn-sm">
+                            Se déconnecter
+                        </a>
+                    </li>
+
                 {% else %}
+
                     <li class="nav-item me-2">
-                        <a href="{% url 'connexion' %}" class="btn btn-primary btn-sm">Se connecter</a>
+                        <a href="{% url 'connexion' %}" class="btn btn-primary btn-sm">
+                            Connexion
+                        </a>
                     </li>
+
                     <li class="nav-item">
-                        <a href="{% url 'inscription' %}" class="btn btn-success btn-sm">S'inscrire</a>
+                        <a href="{% url 'inscription' %}" class="btn btn-success btn-sm">
+                            Inscription
+                        </a>
                     </li>
+
                 {% endif %}
+
             </ul>
+
         </div>
     </div>
 </nav>

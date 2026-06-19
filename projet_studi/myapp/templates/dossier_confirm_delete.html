@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <div class="card border-danger shadow-sm">
+
+        <!-- HEADER -->
+        <div class="card-header bg-danger text-white">
+            <h4 class="mb-0">
+                🗑 Confirmation de suppression du dossier
+            </h4>
+        </div>
+
+        <div class="card-body">
+
+            <p class="mb-3">
+                Êtes-vous sûr de vouloir supprimer ce dossier ?
+            </p>
+
+            <div class="alert alert-warning">
+                Cette action est <strong>irréversible</strong>.
+            </div>
+
+            <!-- INFOS DOSSIER -->
+            <ul class="list-group mb-4">
+
+                <li class="list-group-item">
+                    <strong>Client :</strong> {{ dossier.client.username }}
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Véhicule :</strong>
+                    {{ dossier.vehicule.marque }} {{ dossier.vehicule.modele }}
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Type :</strong> {{ dossier.get_dossier_type_display }}
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Statut :</strong> {{ dossier.get_statut_display }}
+                </li>
+
+                <li class="list-group-item">
+                    <strong>Date :</strong> {{ dossier.created_at|date:"d/m/Y" }}
+                </li>
+
+            </ul>
+
+            <!-- ACTIONS -->
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="d-flex justify-content-between">
+
+                    <a href="{% url 'mes_dossiers' %}"
+                       class="btn btn-secondary">
+                        Annuler
+                    </a>
+
+                    <button type="submit" class="btn btn-danger">
+                        Oui, supprimer définitivement
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

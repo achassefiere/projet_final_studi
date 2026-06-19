@@ -4,9 +4,11 @@
 
 <div class="container mt-4">
 
+    <!-- ===================== -->
+    <!-- 📁 DOSSIER HEADER -->
+    <!-- ===================== -->
     <div class="card shadow-sm">
 
-        <!-- HEADER -->
         <div class="card-header bg-warning">
             <h3 class="mb-0">
                 📁 Dossier #{{ dossier.pk }}
@@ -15,20 +17,18 @@
 
         <div class="card-body">
 
+            <!-- ===================== -->
+            <!-- 📄 INFOS DOSSIER -->
+            <!-- ===================== -->
             <div class="row">
 
-                <!-- INFOS DOSSIER -->
                 <div class="col-md-6">
 
-                    <p>
-                        <strong>Client :</strong>
-                        {{ dossier.client.username }}
-                    </p>
+                    <p><strong>Client :</strong> {{ dossier.client.username }}</p>
 
                     <p>
                         <strong>Véhicule :</strong>
-                        {{ dossier.vehicule.marque }}
-                        {{ dossier.vehicule.modele }}
+                        {{ dossier.vehicule.marque }} {{ dossier.vehicule.modele }}
                     </p>
 
                     <p>
@@ -41,13 +41,12 @@
 
                         {% if dossier.statut == "approuve" %}
                             <span class="badge bg-success">Approuvé</span>
-
                         {% elif dossier.statut == "rejete" %}
                             <span class="badge bg-danger">Refusé</span>
-
                         {% else %}
                             <span class="badge bg-info text-dark">Soumis</span>
                         {% endif %}
+
                     </p>
 
                     <p>
@@ -75,7 +74,71 @@
 
             <hr>
 
-            <!-- ACTIONS -->
+            <!-- ===================== -->
+            <!-- 📎 DOCUMENTS -->
+            <!-- ===================== -->
+
+            <h4 class="mb-3">📎 Documents</h4>
+
+            {% if documents %}
+
+                <div class="list-group">
+
+                    {% for document in documents %}
+
+                        <div class="list-group-item">
+
+                            <div class="d-flex justify-content-between align-items-center">
+
+                                <div>
+
+                                    <strong>
+                                        {{ document.get_document_type_display }}
+                                    </strong>
+
+                                    {% if document.label %}
+                                        <br>
+                                        {{ document.label }}
+                                    {% endif %}
+
+                                    <br>
+
+                                    <small class="text-muted">
+                                        Déposé le {{ document.uploaded_at|date:"d/m/Y H:i" }}
+                                    </small>
+
+                                </div>
+
+                                <!-- 📥 DOWNLOAD -->
+                                {% if document.file %}
+                                    <a href="{{ document.file.url }}"
+                                       class="btn btn-outline-primary btn-sm"
+                                       download>
+                                        ⬇️ Télécharger
+                                    </a>
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <div class="alert alert-info">
+                    Aucun document pour ce dossier.
+                </div>
+
+            {% endif %}
+
+            <hr>
+
+            <!-- ===================== -->
+            <!-- ⚙️ ACTIONS -->
+            <!-- ===================== -->
             <div class="d-flex justify-content-between">
 
                 <a href="{% url 'mes_dossiers' %}" class="btn btn-secondary">
@@ -84,31 +147,38 @@
 
                 <div class="d-flex gap-2">
 
-                    <!-- 🛠 ADMIN UNIQUEMENT -->
+                    <!-- 🛠 ADMIN -->
                     {% if user.is_staff %}
 
                         {% if dossier.statut != "approuve" %}
                             <a href="{% url 'dossier_valider' dossier.pk %}"
-                            class="btn btn-success">
+                               class="btn btn-success">
                                 ✅ Valider
                             </a>
                         {% endif %}
 
                         {% if dossier.statut != "rejete" %}
                             <a href="{% url 'dossier_refuser' dossier.pk %}"
-                            class="btn btn-danger">
+                               class="btn btn-danger">
                                 ❌ Refuser
                             </a>
                         {% endif %}
 
                     {% endif %}
 
-                    <!-- 👤 CLIENT OU ADMIN : suppression -->
+                    <!-- 👤 CLIENT + ADMIN -->
                     {% if user == dossier.client or user.is_staff %}
+
+                        <a href="{% url 'dossier_download' dossier.pk %}"
+                           class="btn btn-primary">
+                            ⬇️ Télécharger ZIP
+                        </a>
+
                         <a href="{% url 'dossier_delete' dossier.pk %}"
-                        class="btn btn-outline-danger">
+                           class="btn btn-outline-danger">
                             🗑 Supprimer
                         </a>
+
                     {% endif %}
 
                 </div>
