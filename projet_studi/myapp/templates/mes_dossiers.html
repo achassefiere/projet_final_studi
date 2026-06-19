@@ -28,6 +28,17 @@
                                 📅 {{ dossier.created_at|date:"d/m/Y" }}
                             </p>
 
+                            <a href="{% url 'dossier_detail' dossier.pk %}"
+                            class="btn btn-primary btn-sm">
+                                Voir
+                            </a>
+
+                            <a href="{% url 'dossier_delete' dossier.pk %}"
+                            class="btn btn-danger btn-sm"
+                            onclick="return confirm('Supprimer ce dossier ?')">
+                                Supprimer
+                            </a>
+
                         </div>
 
                     </div>

@@ -143,10 +143,38 @@
                                 </h5>
 
                                 <p class="card-text">
-                                    📌 {{ dossier.get_dossier_type_display }}<br>
-                                    📊 {{ dossier.get_statut_display }}<br>
-                                    📅 {{ dossier.created_at|date:"d/m/Y" }}
+
+                                    Type : {{ dossier.get_dossier_type_display }}<br>
+
+                                    Statut :
+                                    {% if dossier.statut == "approuve" %}
+                                        <span class="badge bg-success">Approuvé</span>
+
+                                    {% elif dossier.statut == "rejete" %}
+                                        <span class="badge bg-danger">Refusé</span>
+
+                                    {% elif dossier.statut == "en_cours" %}
+                                        <span class="badge bg-warning text-dark">En cours d'examen</span>
+
+                                    {% elif dossier.statut == "soumis" %}
+                                        <span class="badge bg-info text-dark">Soumis</span>
+
+                                    {% else %}
+                                        <span class="badge bg-secondary">
+                                            {{ dossier.get_statut_display }}
+                                        </span>
+                                    {% endif %}
+
+                                    <br><br>
+
+                                    Déposé le : {{ dossier.created_at|date:"d/m/Y" }}
+
                                 </p>
+                                
+                                <a href="{% url 'dossier_detail' dossier.pk %}"
+                                class="btn btn-primary btn-sm">
+                                    Voir le dossier
+                                </a>
 
                             </div>
 

@@ -25,14 +25,10 @@ class Vehicule(models.Model):
 
     # Statut
     STATUT_DISPONIBLE = "disponible"
-    STATUT_LOUE = "loue"
-    STATUT_VENDU = "vendu"
     STATUT_INDISPONIBLE = "indisponible"
 
     STATUT_CHOICES = [
         (STATUT_DISPONIBLE, "Disponible"),
-        (STATUT_LOUE, "Loue"),
-        (STATUT_VENDU, "Vendu"),
         (STATUT_INDISPONIBLE, "Indisponible"),
     ]
 
@@ -178,20 +174,14 @@ class Dossier(models.Model):
         (TYPE_LOCATION, "Location longue durée"),
     ]
  
-    STATUT_BROUILLON = "brouillon"
     STATUT_SOUMIS = "soumis"
-    STATUT_EN_COURS = "en_cours"
     STATUT_APPROUVE = "approuve"
     STATUT_REJETE = "rejete"
-    STATUT_ANNULE = "annule"
  
     STATUT_CHOICES = [
-        (STATUT_BROUILLON, "Brouillon"),
         (STATUT_SOUMIS, "Soumis"),
-        (STATUT_EN_COURS, "En cours d'examen"),
         (STATUT_APPROUVE, "Approuvé"),
         (STATUT_REJETE, "Refusé"),
-        (STATUT_ANNULE, "Annulé"),
     ]
  
     # Relations
@@ -210,7 +200,7 @@ class Dossier(models.Model):
  
     # Type & état
     dossier_type = models.CharField("Type", max_length=20, choices=TYPE_CHOICES)
-    statut = models.CharField("Statut", max_length=20, choices=STATUT_CHOICES, default=STATUT_BROUILLON)
+    statut = models.CharField("Statut", max_length=20, choices=STATUT_CHOICES, default=STATUT_SOUMIS)
  
     # Options LLD choisies (uniquement pour TYPE_LOCATION)
     location_options = models.ManyToManyField(

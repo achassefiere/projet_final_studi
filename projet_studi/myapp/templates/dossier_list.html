@@ -43,13 +43,16 @@
                     <td>{{ dossier.created_at|date:"d/m/Y" }}</td>
 
                     <td>
-
-                        <a href="{% url 'admin_dossier_valider' dossier.pk %}"
+                        <a href="{% url 'dossier_detail' dossier.pk %}"
+                            class="btn btn-primary btn-sm">
+                                Voir
+                        </a>
+                        <a href="{% url 'dossier_valider' dossier.pk %}"
                            class="btn btn-success btn-sm">
                             Valider
                         </a>
 
-                        <a href="{% url 'admin_dossier_refuser' dossier.pk %}"
+                        <a href="{% url 'dossier_refuser' dossier.pk %}"
                            class="btn btn-danger btn-sm">
                             Refuser
                         </a>

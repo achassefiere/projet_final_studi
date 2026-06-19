@@ -225,7 +225,12 @@ def upload_document(request, dossier_id):
     
 @login_required
 def dossier_detail(request, pk):
+
     dossier = get_object_or_404(Dossier, pk=pk)
+
+    # 🔒 sécurité : client OU admin uniquement
+    if not request.user.is_staff and dossier.client != request.user:
+        return redirect("accueil")
 
     return render(request, "dossier_detail.html", {
         "dossier": dossier
@@ -261,7 +266,9 @@ def dossier_valider(request, pk):
     dossier.reviewed_by = request.user
     dossier.save()
 
-    return redirect("admin_dossiers_list")
+    update_vehicule_status(dossier.vehicule)
+
+    return redirect("dossier_list")
 
 @user_passes_test(is_admin)
 def dossier_refuser(request, pk):
@@ -272,5 +279,47 @@ def dossier_refuser(request, pk):
     dossier.decided_at = timezone.now()
     dossier.reviewed_by = request.user
     dossier.save()
+    
+    update_vehicule_status(dossier.vehicule)
 
-    return redirect("admin_dossiers_list")
+    return redirect("dossier_list")
+
+@login_required
+def dossier_delete(request, pk):
+
+    dossier = get_object_or_404(Dossier, pk=pk)
+
+    # 🔒 sécurité : client ou admin seulement
+    if request.user != dossier.client and not request.user.is_staff:
+        return redirect("accueil")
+
+    vehicule = dossier.vehicule
+
+    if request.method == "POST":
+        dossier.delete()
+
+        # 🔥 recalcul statut véhicule après suppression
+        update_vehicule_status(vehicule)
+
+        return redirect("mes_dossiers")
+
+    return render(request, "dossier_confirm_delete.html", {
+        "dossier": dossier
+    })
+
+def update_vehicule_status(vehicule):
+    """
+    Met à jour le statut du véhicule selon les dossiers approuvés.
+    """
+
+    has_approved = Dossier.objects.filter(
+        vehicule=vehicule,
+        statut=Dossier.STATUT_APPROUVE
+    ).exists()
+
+    if has_approved:
+        vehicule.statut = Vehicule.STATUT_INDISPONIBLE
+    else:
+        vehicule.statut = Vehicule.STATUT_DISPONIBLE
+
+    vehicule.save(update_fields=["statut"])

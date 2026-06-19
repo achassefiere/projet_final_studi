@@ -1,8 +1,124 @@
-<h2>Dossier #{{ dossier.pk }}</h2>
+{% extends "base.html" %}
 
-<p>Client : {{ dossier.client.username }}</p>
-<p>Véhicule : {{ dossier.vehicule }}</p>
-<p>Statut : {{ dossier.get_statut_display }}</p>
+{% block content %}
 
-<a href="{% url 'dossier_valider' dossier.pk %}">Valider</a>
-<a href="{% url 'dossier_refuser' dossier.pk %}">Refuser</a>
+<div class="container mt-4">
+
+    <div class="card shadow-sm">
+
+        <!-- HEADER -->
+        <div class="card-header bg-warning">
+            <h3 class="mb-0">
+                📁 Dossier #{{ dossier.pk }}
+            </h3>
+        </div>
+
+        <div class="card-body">
+
+            <div class="row">
+
+                <!-- INFOS DOSSIER -->
+                <div class="col-md-6">
+
+                    <p>
+                        <strong>Client :</strong>
+                        {{ dossier.client.username }}
+                    </p>
+
+                    <p>
+                        <strong>Véhicule :</strong>
+                        {{ dossier.vehicule.marque }}
+                        {{ dossier.vehicule.modele }}
+                    </p>
+
+                    <p>
+                        <strong>Type :</strong>
+                        {{ dossier.get_dossier_type_display }}
+                    </p>
+
+                    <p>
+                        <strong>Statut :</strong>
+
+                        {% if dossier.statut == "approuve" %}
+                            <span class="badge bg-success">Approuvé</span>
+
+                        {% elif dossier.statut == "rejete" %}
+                            <span class="badge bg-danger">Refusé</span>
+
+                        {% else %}
+                            <span class="badge bg-info text-dark">Soumis</span>
+                        {% endif %}
+                    </p>
+
+                    <p>
+                        <strong>Date de dépôt :</strong>
+                        {{ dossier.created_at|date:"d/m/Y H:i" }}
+                    </p>
+
+                    {% if dossier.decided_at %}
+                        <p>
+                            <strong>Décision :</strong>
+                            {{ dossier.decided_at|date:"d/m/Y H:i" }}
+                        </p>
+                    {% endif %}
+
+                    {% if dossier.client_notes %}
+                        <p>
+                            <strong>Notes client :</strong><br>
+                            {{ dossier.client_notes }}
+                        </p>
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+            <hr>
+
+            <!-- ACTIONS -->
+            <div class="d-flex justify-content-between">
+
+                <a href="{% url 'mes_dossiers' %}" class="btn btn-secondary">
+                    Retour
+                </a>
+
+                <div class="d-flex gap-2">
+
+                    <!-- 🛠 ADMIN UNIQUEMENT -->
+                    {% if user.is_staff %}
+
+                        {% if dossier.statut != "approuve" %}
+                            <a href="{% url 'dossier_valider' dossier.pk %}"
+                            class="btn btn-success">
+                                ✅ Valider
+                            </a>
+                        {% endif %}
+
+                        {% if dossier.statut != "rejete" %}
+                            <a href="{% url 'dossier_refuser' dossier.pk %}"
+                            class="btn btn-danger">
+                                ❌ Refuser
+                            </a>
+                        {% endif %}
+
+                    {% endif %}
+
+                    <!-- 👤 CLIENT OU ADMIN : suppression -->
+                    {% if user == dossier.client or user.is_staff %}
+                        <a href="{% url 'dossier_delete' dossier.pk %}"
+                        class="btn btn-outline-danger">
+                            🗑 Supprimer
+                        </a>
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
