@@ -71,11 +71,6 @@ WSGI_APPLICATION = 'projet_studi.wsgi.application'
 
 
 DATABASES = {
-    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
-}
-
-
-DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': config('DB_NAME', default='antoinec$default'),  # Nom de la base sur PythonAnywhere
