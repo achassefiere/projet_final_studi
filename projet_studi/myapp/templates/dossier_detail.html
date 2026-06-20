@@ -5,7 +5,7 @@
 <div class="container mt-4">
 
     <!-- ===================== -->
-    <!-- 📁 DOSSIER HEADER -->
+    <!-- 📁 HEADER DOSSIER -->
     <!-- ===================== -->
     <div class="card shadow-sm">
 
@@ -18,13 +18,16 @@
         <div class="card-body">
 
             <!-- ===================== -->
-            <!-- 📄 INFOS DOSSIER -->
+            <!-- 📄 INFOS GÉNÉRALES -->
             <!-- ===================== -->
             <div class="row">
 
                 <div class="col-md-6">
 
-                    <p><strong>Client :</strong> {{ dossier.client.username }}</p>
+                    <p>
+                        <strong>Client :</strong>
+                        {{ dossier.client.username }}
+                    </p>
 
                     <p>
                         <strong>Véhicule :</strong>
@@ -50,7 +53,7 @@
                     </p>
 
                     <p>
-                        <strong>Date de dépôt :</strong>
+                        <strong>Date de création :</strong>
                         {{ dossier.created_at|date:"d/m/Y H:i" }}
                     </p>
 
@@ -61,12 +64,15 @@
                         </p>
                     {% endif %}
 
-                    {% if dossier.client_notes %}
-                        <p>
-                            <strong>Notes client :</strong><br>
-                            {{ dossier.client_notes }}
-                        </p>
-                    {% endif %}
+                    <p>
+                        <strong>Prix véhicule :</strong>
+
+                        {% if dossier.dossier_type == "location" %}
+                            {{ dossier.vehicule.loyer_mensuel }} € / mois
+                        {% else %}
+                            {{ dossier.vehicule.prix_vente }} €
+                        {% endif %}
+                    </p>
 
                 </div>
 
@@ -75,9 +81,50 @@
             <hr>
 
             <!-- ===================== -->
+            <!-- 📦 OPTIONS LOCATION -->
+            <!-- ===================== -->
+            {% if dossier.dossier_type == "location" %}
+
+                <h5>📦 Options de location</h5>
+
+                <p>
+                    {% if dossier.location_options.all %}
+                        {% for opt in dossier.location_options.all %}
+                            <span class="badge bg-secondary">
+                                {{ opt.label }}
+                            </span>
+                        {% endfor %}
+                    {% else %}
+                        Aucune option sélectionnée
+                    {% endif %}
+                </p>
+
+                <p>
+                    <strong>Coût des options :</strong>
+                    {{ dossier.location_total_price }} €
+                </p>
+
+            {% endif %}
+
+            <hr>
+
+            <!-- ===================== -->
+            <!-- 📝 NOTES -->
+            <!-- ===================== -->
+            {% if dossier.client_notes %}
+
+                <p>
+                    <strong>Notes client :</strong><br>
+                    {{ dossier.client_notes }}
+                </p>
+
+            {% endif %}
+
+            <hr>
+
+            <!-- ===================== -->
             <!-- 📎 DOCUMENTS -->
             <!-- ===================== -->
-
             <h4 class="mb-3">📎 Documents</h4>
 
             {% if documents %}
@@ -109,7 +156,6 @@
 
                                 </div>
 
-                                <!-- 📥 DOWNLOAD -->
                                 {% if document.file %}
                                     <a href="{{ document.file.url }}"
                                        class="btn btn-outline-primary btn-sm"
@@ -147,7 +193,6 @@
 
                 <div class="d-flex gap-2">
 
-                    <!-- 🛠 ADMIN -->
                     {% if user.is_staff %}
 
                         {% if dossier.statut != "approuve" %}
@@ -166,7 +211,6 @@
 
                     {% endif %}
 
-                    <!-- 👤 CLIENT + ADMIN -->
                     {% if user == dossier.client or user.is_staff %}
 
                         <a href="{% url 'dossier_download' dossier.pk %}"

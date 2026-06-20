@@ -114,176 +114,136 @@ class Vehicule(models.Model):
     def switch_to_vente(self):
         self.mode = self.MODE_VENTE
         self.save(update_fields=["mode", "updated_at"])
+        
 
- 
- 
-# ──────────────────────────────────────────────
-# OPTIONS DE LOCATION (LLD)
-# ──────────────────────────────────────────────
- 
 class OptionLocation(models.Model):
-    """Option disponible dans un abonnement de location longue durée."""
- 
-    CODE_TOUS_RISQUES = "tous_risques"
-    CODE_DEPANNAGE = "depannage"
-    CODE_MAINTENANCE = "maintenance"
-    CODE_CT = "controle_technique"
- 
-    CODE_CHOICES = [
-        (CODE_TOUS_RISQUES, "Assurance tous risques"),
-        (CODE_DEPANNAGE, "Assistance depannage"),
-        (CODE_MAINTENANCE, "Entretien & SAV"),
-        (CODE_CT, "Contrôle technique"),
-    ]
- 
-    code = models.CharField("Code", max_length=30, unique=True, choices=CODE_CHOICES)
-    label = models.CharField("Libellé", max_length=100)
-    description = models.TextField("Description", blank=True)
-    prix_mensuel = models.DecimalField(
-        "Prix mensuel (€)",
-        max_digits=8, decimal_places=2,
-        default=Decimal("0.00"),
-    )
-    is_included = models.BooleanField(
-        "Incluse dans l'abonnement",
-        default=False,
-        help_text="Si cochée, l'option est offerte sans supplément.",
-    )
- 
-    class Meta:
-        verbose_name = "Option de location"
-        verbose_name_plural = "Options de location"
- 
+
+    code = models.CharField(max_length=50, unique=True)
+    label = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    prix_mensuel = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+
+    is_active = models.BooleanField(default=True)
+
     def __str__(self):
-        tag = "incluse" if self.is_included else f"{self.prix_mensuel} €/mois"
-        return f"{self.label} ({tag})"
+        return f"{self.label} ({self.prix_mensuel}€)"
  
  
 # ──────────────────────────────────────────────
 # DOSSIER (achat ou location)
 # ──────────────────────────────────────────────
- 
+
 class Dossier(models.Model):
-    """Dossier déposé par un client pour un achat ou une location LLD."""
- 
+    """Dossier client achat ou location LLD."""
+
+    # =========================
+    # TYPES
+    # =========================
     TYPE_ACHAT = "achat"
     TYPE_LOCATION = "location"
- 
+
     TYPE_CHOICES = [
         (TYPE_ACHAT, "Achat"),
         (TYPE_LOCATION, "Location longue durée"),
     ]
- 
+
+    # =========================
+    # STATUT
+    # =========================
     STATUT_SOUMIS = "soumis"
     STATUT_APPROUVE = "approuve"
     STATUT_REJETE = "rejete"
- 
+
     STATUT_CHOICES = [
         (STATUT_SOUMIS, "Soumis"),
         (STATUT_APPROUVE, "Approuvé"),
         (STATUT_REJETE, "Refusé"),
     ]
- 
-    # Relations
+
+    # =========================
+    # RELATIONS
+    # =========================
     client = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
         related_name="dossiers",
-        verbose_name="Client",
     )
+
     vehicule = models.ForeignKey(
-        Vehicule,
+        "Vehicule",
         on_delete=models.CASCADE,
         related_name="dossiers",
-        verbose_name="Véhicule",
     )
- 
-    # Type & état
-    dossier_type = models.CharField("Type", max_length=20, choices=TYPE_CHOICES)
-    statut = models.CharField("Statut", max_length=20, choices=STATUT_CHOICES, default=STATUT_SOUMIS)
- 
-    # Options LLD choisies (uniquement pour TYPE_LOCATION)
+
+    # =========================
+    # TYPE + STATUT
+    # =========================
+    dossier_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default=STATUT_SOUMIS)
+
+    # =========================
+    # LOCATION
+    # =========================
+    location_duration_months = models.PositiveSmallIntegerField(null=True, blank=True)
+
     location_options = models.ManyToManyField(
         OptionLocation,
         blank=True,
-        verbose_name="Options choisies",
+        related_name="dossiers"
     )
- 
-    # Durée pour la LLD
-    location_duration_months = models.PositiveSmallIntegerField(
-        "Durée (mois)",
-        null=True, blank=True,
-        help_text="Applicable uniquement pour une location LLD.",
-    )
- 
-    # Remarques
-    client_notes = models.TextField("Notes du client", blank=True)
-    staff_notes = models.TextField("Notes internes", blank=True)
- 
-    # Horodatage
+
+    # 👉 prix total des options
+    location_price = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+
+    # =========================
+    # NOTES
+    # =========================
+    client_notes = models.TextField(blank=True)
+    staff_notes = models.TextField(blank=True)
+
+    # =========================
+    # TIMESTAMPS
+    # =========================
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    submitted_at = models.DateTimeField("Soumis le", null=True, blank=True)
-    decided_at = models.DateTimeField("Décidé le", null=True, blank=True)
- 
-    # Agent qui a traité le dossier
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    decided_at = models.DateTimeField(null=True, blank=True)
+
     reviewed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
-        null=True, blank=True,
+        null=True,
+        blank=True,
         related_name="reviewed_dossiers",
-        verbose_name="Traité par",
     )
- 
-    class Meta:
-        verbose_name = "Dossier"
-        verbose_name_plural = "Dossiers"
-        ordering = ["-created_at"]
-        
-    def clean(self):
-        super().clean()
 
+    # =========================
+    # VALIDATION
+    # =========================
+    def clean(self):
         if not self.dossier_type or not self.vehicule:
-            return  # 🔥 ne crash pas ici
+            return
 
         mode = self.vehicule.mode
 
-        # 🔥 ACHAT
         if self.dossier_type == self.TYPE_ACHAT:
-            if mode != Vehicule.MODE_VENTE:
-                raise ValidationError({
-                    "vehicule": "Ce véhicule n'est pas disponible à l'achat."
-                })
+            if mode != "vente":
+                raise ValidationError("Ce véhicule n'est pas disponible à l'achat.")
 
             if self.location_duration_months:
-                raise ValidationError({
-                    "location_duration_months": "Pas de durée pour un achat."
-                })
+                raise ValidationError("Pas de durée pour un achat.")
 
-        # 🔥 LOCATION
         elif self.dossier_type == self.TYPE_LOCATION:
-            if mode != Vehicule.MODE_LOCATION:
-                raise ValidationError({
-                    "vehicule": "Ce véhicule n'est pas disponible en location."
-                })
-    
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
- 
+            if mode != "location":
+                raise ValidationError("Ce véhicule n'est pas disponible en location.")
+            
+    @property
+    def location_total_price(self):
+        return sum(opt.prix_mensuel for opt in self.location_options.all())
+
     def __str__(self):
-        return (
-            f"Dossier #{self.pk} – {self.get_dossier_type_display()} – "
-            f"{self.vehicule} – {self.client}"
-        )
- 
-    @property
-    def is_location(self):
-        return self.dossier_type == self.TYPE_LOCATION
- 
-    @property
-    def is_achat(self):
-        return self.dossier_type == self.TYPE_ACHAT
- 
+        return f"Dossier #{self.pk} - {self.get_dossier_type_display()} - {self.vehicule}"
+    
 # ──────────────────────────────────────────────
 # DOCUMENTS DU DOSSIER
 # ──────────────────────────────────────────────

@@ -2,6 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from .models import *
+from .constants import *
 
 User = get_user_model()
 
@@ -108,10 +109,18 @@ class VehiculeForm(forms.ModelForm):
         }
         
 class DossierForm(forms.ModelForm):
+
+    location_options = forms.ModelMultipleChoiceField(
+        queryset=OptionLocation.objects.filter(is_active=True),
+        required=False,
+        widget=forms.CheckboxSelectMultiple
+    )
+
     class Meta:
         model = Dossier
         fields = [
             "location_duration_months",
+            "location_options",
             "client_notes",
         ]
         

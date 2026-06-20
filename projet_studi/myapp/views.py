@@ -13,6 +13,8 @@ from .models import *
 from datetime import datetime
 from io import BytesIO
 from .services import *
+from .constants import *
+
 
 logger = logging.getLogger(__name__)
 
@@ -158,77 +160,48 @@ def vehicule_detail(request, pk):
         "readonly": True
     })
 
+
 @login_required
 def dossier_create(request, vehicule_id):
 
     vehicule = get_object_or_404(Vehicule, pk=vehicule_id)
 
-    # 🔒 sécurité : véhicule disponible
     if vehicule.statut != Vehicule.STATUT_DISPONIBLE:
         return render(request, "error.html", {
             "message": "Ce véhicule n'est plus disponible."
         })
 
+    form = DossierForm(request.POST or None)
+
+    print("METHOD:", request.method)
+
     if request.method == "POST":
+        print("FORM VALID:", form.is_valid())
+        print("ERRORS:", form.errors)
 
-        form = DossierForm(request.POST)
+    if request.method == "POST" and form.is_valid():
 
-        if form.is_valid():
+        dossier = form.save(commit=False)
 
-            try:
-                dossier = form.save(commit=False)
+        # 👇 IMPORTANT : type dossier (corrige ton bug "Type vide")
+        dossier.dossier_type = (
+            Dossier.TYPE_LOCATION
+            if vehicule.mode == "location"
+            else Dossier.TYPE_ACHAT
+        )
 
-                dossier.client = request.user
-                dossier.vehicule = vehicule
+        dossier.client = request.user
+        dossier.vehicule = vehicule
+        dossier.statut = Dossier.STATUT_SOUMIS
+        dossier.submitted_at = timezone.now()
 
-                # 📌 statut par défaut
-                dossier.statut = Dossier.STATUT_SOUMIS
-                dossier.submitted_at = timezone.now()
+        dossier.save()
 
-                dossier.save()
-                form.save_m2m()  # options location (ManyToMany)
+        # 🔗 ManyToMany
+        options = form.cleaned_data.get("location_options") or []
+        dossier.location_options.set(options)
 
-                # 🔔 NOTIFICATION CLIENT
-                Notification.objects.create(
-                    user=request.user,
-                    title="Dossier envoyé",
-                    message="Votre dossier a été soumis avec succès.",
-                    type="success"
-                )
-
-                # 🔔 NOTIFICATION ADMIN
-                from django.contrib.auth import get_user_model
-                User = get_user_model()
-
-                for admin in User.objects.filter(is_staff=True):
-                    Notification.objects.create(
-                        user=admin,
-                        title="Nouveau dossier",
-                        message=f"Un nouveau dossier a été créé pour {vehicule}",
-                        type="info"
-                    )
-
-                # 🚀 REDIRECTION CORRIGÉE (IMPORTANT)
-                return redirect("upload_document", dossier_id=dossier.id)
-
-            except Exception as e:
-
-                logger.error(f"Erreur création dossier: {e}")
-
-                Notification.objects.create(
-                    user=request.user,
-                    title="Erreur",
-                    message="Une erreur est survenue lors de la création du dossier.",
-                    type="error"
-                )
-
-                return render(request, "dossier_form.html", {
-                    "form": form,
-                    "vehicule": vehicule
-                })
-
-    else:
-        form = DossierForm()
+        return redirect("upload_document", dossier_id=dossier.pk)
 
     return render(request, "dossier_form.html", {
         "form": form,
@@ -355,14 +328,6 @@ def dossier_valider(request, pk):
 
     # 🚗 mise à jour véhicule (disponible / indisponible)
     update_vehicule_status(dossier.vehicule)
-
-    # 🔔 NOTIFICATION CLIENT
-    Notification.objects.create(
-        user=dossier.client,
-        title="Dossier approuvé 🎉",
-        message="Votre dossier a été validé avec succès.",
-        type="success"
-    )
 
     return redirect("dossier_list")
 

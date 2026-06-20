@@ -48,3 +48,4 @@ class VehiculeAdmin(admin.ModelAdmin):
 
     # champs en lecture seule
     readonly_fields = ("created_at", "updated_at")
+    
