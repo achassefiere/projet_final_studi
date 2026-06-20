@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+<div class="card shadow-sm">
+
+    <!-- HEADER -->
+    <div class="card-header bg-primary text-white">
+        <h3 class="mb-0">
+            📄 Ajouter un document
+        </h3>
+    </div>
+
+    <div class="card-body">
+
+        <p>
+            <strong>Dossier :</strong>
+            {{ dossier.vehicule.marque }} {{ dossier.vehicule.modele }}
+        </p>
+
+        <p>
+            <strong>Documents déposés :</strong>
+            {{ documents|length }}/5
+        </p>
+
+        <hr>
+
+        <!-- ❌ ERREURS -->
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                {{ form.errors }}
+            </div>
+        {% endif %}
+
+        <!-- ===================== -->
+        <!-- 📤 FORM UPLOAD -->
+        <!-- ===================== -->
+        <form method="post" enctype="multipart/form-data">
+
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label">Type de document</label>
+                {{ form.document_type }}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Fichier</label>
+                {{ form.file }}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Nom du fichier</label>
+                {{ form.label }}
+            </div>
+
+            {% if documents|length < 5 %}
+                <button type="submit" class="btn btn-primary">
+                    📤 Uploader
+                </button>
+            {% else %}
+                <div class="alert alert-warning">
+                    Maximum 5 documents atteints
+                </div>
+            {% endif %}
+
+        </form>
+
+        <hr>
+
+        <!-- ===================== -->
+        <!-- ✔ FORM VALIDATION -->
+        <!-- ===================== -->
+
+        {% if documents|length >= 1 %}
+
+            <form method="post" action="{% url 'document_valider' dossier.pk %}">
+                {% csrf_token %}
+
+                <button type="submit" class="btn btn-success">
+                    ✔ Valider le dossier
+                </button>
+            </form>
+
+        {% else %}
+
+            <div class="alert alert-info">
+                Ajoutez au moins 1 document pour valider le dossier.
+            </div>
+
+        {% endif %}
+
+        <a href="{% url 'mes_dossiers' %}" class="btn btn-secondary mt-3">
+            Retour
+        </a>
+
+        <hr>
+
+        <!-- 📁 LISTE DOCUMENTS -->
+        <h5>Documents déposés</h5>
+
+        <div class="list-group mt-3">
+
+            {% for document in documents %}
+
+                <div class="list-group-item">
+
+                    <strong>{{ document.get_document_type_display }}</strong>
+
+                    {% if document.label %}
+                        <br>{{ document.label }}
+                    {% endif %}
+
+                    <br>
+
+                    <small class="text-muted">
+                        Déposé le {{ document.uploaded_at|date:"d/m/Y H:i" }}
+                    </small>
+
+                </div>
+
+            {% empty %}
+                <div class="list-group-item">
+                    Aucun document déposé.
+                </div>
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+{% endblock %}

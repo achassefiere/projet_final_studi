@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <div class="card shadow-sm">
+
+        <!-- HEADER -->
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">
+                {{ vehicule.marque }} {{ vehicule.modele }}
+            </h3>
+        </div>
+
+        <div class="card-body">
+
+            <div class="row">
+
+                <!-- IMAGE -->
+                <div class="col-md-6 mb-3">
+                    <label class="form-label"><strong>Photo principale</strong></label>
+
+                    {% if vehicule.photo %}
+                        <div class="mb-2">
+                            <img src="{{ vehicule.photo.url }}"
+                                 class="img-fluid img-thumbnail"
+                                 style="max-height: 300px;">
+                        </div>
+                    {% else %}
+                        <p>Aucune photo disponible</p>
+                    {% endif %}
+                </div>
+
+                <!-- INFOS -->
+                <div class="col-md-6 mb-3">
+
+                    <p><strong>Marque :</strong> {{ vehicule.marque }}</p>
+                    <p><strong>Modèle :</strong> {{ vehicule.modele }}</p>
+                    <p><strong>Motorisation :</strong> {{ vehicule.motorisation }}</p>
+                    <p><strong>Année :</strong> {{ vehicule.annee }}</p>
+                    <p><strong>Kilométrage :</strong> {{ vehicule.kilometrage }} km</p>
+                    <p><strong>VIN :</strong> {{ vehicule.numero_vin }}</p>
+                    <p><strong>Mode :</strong> {{ vehicule.get_mode_display }}</p>
+                    <p><strong>Prix de vente :</strong> {{ vehicule.prix_vente }} €</p>
+                    <p><strong>Loyer mensuel :</strong> {{ vehicule.loyer_mensuel }} €</p>
+                    <p><strong>Statut :</strong> {{ vehicule.get_statut_display }}</p>
+
+                </div>
+
+            </div>
+
+            <hr>
+
+            <!-- ACTIONS -->
+            <div class="d-flex justify-content-between">
+
+                <a href="{% url 'vehicule_list' %}" class="btn btn-secondary">
+                    Retour
+                </a>
+
+                {% if user.is_authenticated %}
+
+                    {% if user.is_staff %}
+
+                        <div>
+                            <a href="{% url 'vehicule_update' vehicule.pk %}"
+                            class="btn btn-primary">
+                                Modifier
+                            </a>
+
+                            <a href="{% url 'vehicule_delete' vehicule.pk %}"
+                            class="btn btn-danger">
+                                Supprimer
+                            </a>
+                        </div>
+
+                    {% else %}
+
+                        <a href="{% url 'dossier_create' vehicule.pk %}"
+                        class="btn btn-success">
+                            📁 Créer un dossier
+                        </a>
+
+                    {% endif %}
+
+                {% else %}
+
+                    <a href="{% url 'connexion' %}" class="btn btn-primary">
+                        Connectez-vous pour créer un dossier
+                    </a>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

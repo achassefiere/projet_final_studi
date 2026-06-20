@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <!-- ===================== -->
+    <!-- 📁 HEADER DOSSIER -->
+    <!-- ===================== -->
+    <div class="card shadow-sm">
+
+        <div class="card-header bg-warning">
+            <h3 class="mb-0">
+                📁 Dossier #{{ dossier.pk }}
+            </h3>
+        </div>
+
+        <div class="card-body">
+
+            <!-- ===================== -->
+            <!-- 📄 INFOS GÉNÉRALES -->
+            <!-- ===================== -->
+            <div class="row">
+
+                <div class="col-md-6">
+
+                    <p>
+                        <strong>Client :</strong>
+                        {{ dossier.client.username }}
+                    </p>
+
+                    <p>
+                        <strong>Véhicule :</strong>
+                        {{ dossier.vehicule.marque }} {{ dossier.vehicule.modele }}
+                    </p>
+
+                    <p>
+                        <strong>Type :</strong>
+                        {{ dossier.get_dossier_type_display }}
+                    </p>
+
+                    <p>
+                        <strong>Statut :</strong>
+
+                        {% if dossier.statut == "approuve" %}
+                            <span class="badge bg-success">Approuvé</span>
+                        {% elif dossier.statut == "rejete" %}
+                            <span class="badge bg-danger">Refusé</span>
+                        {% else %}
+                            <span class="badge bg-info text-dark">Soumis</span>
+                        {% endif %}
+
+                    </p>
+
+                    <p>
+                        <strong>Date de création :</strong>
+                        {{ dossier.created_at|date:"d/m/Y H:i" }}
+                    </p>
+
+                    {% if dossier.decided_at %}
+                        <p>
+                            <strong>Décision :</strong>
+                            {{ dossier.decided_at|date:"d/m/Y H:i" }}
+                        </p>
+                    {% endif %}
+
+                    <p>
+                        <strong>Prix véhicule :</strong>
+
+                        {% if dossier.dossier_type == "location" %}
+                            {{ dossier.vehicule.loyer_mensuel }} € / mois
+                        {% else %}
+                            {{ dossier.vehicule.prix_vente }} €
+                        {% endif %}
+                    </p>
+
+                </div>
+
+            </div>
+
+            <hr>
+
+            <!-- ===================== -->
+            <!-- 📦 OPTIONS LOCATION -->
+            <!-- ===================== -->
+            {% if dossier.dossier_type == "location" %}
+
+                <h5>📦 Options de location</h5>
+
+                <p>
+                    {% if dossier.location_options.all %}
+                        {% for opt in dossier.location_options.all %}
+                            <span class="badge bg-secondary">
+                                {{ opt.label }}
+                            </span>
+                        {% endfor %}
+                    {% else %}
+                        Aucune option sélectionnée
+                    {% endif %}
+                </p>
+
+                <p>
+                    <strong>Coût des options :</strong>
+                    {{ dossier.location_total_price }} €
+                </p>
+
+            {% endif %}
+
+            <hr>
+
+            <!-- ===================== -->
+            <!-- 📝 NOTES -->
+            <!-- ===================== -->
+            {% if dossier.client_notes %}
+
+                <p>
+                    <strong>Notes client :</strong><br>
+                    {{ dossier.client_notes }}
+                </p>
+
+            {% endif %}
+
+            <hr>
+
+            <!-- ===================== -->
+            <!-- 📎 DOCUMENTS -->
+            <!-- ===================== -->
+            <h4 class="mb-3">📎 Documents</h4>
+
+            {% if documents %}
+
+                <div class="list-group">
+
+                    {% for document in documents %}
+
+                        <div class="list-group-item">
+
+                            <div class="d-flex justify-content-between align-items-center">
+
+                                <div>
+
+                                    <strong>
+                                        {{ document.get_document_type_display }}
+                                    </strong>
+
+                                    {% if document.label %}
+                                        <br>
+                                        {{ document.label }}
+                                    {% endif %}
+
+                                    <br>
+
+                                    <small class="text-muted">
+                                        Déposé le {{ document.uploaded_at|date:"d/m/Y H:i" }}
+                                    </small>
+
+                                </div>
+
+                                {% if document.file %}
+                                    <a href="{{ document.file.url }}"
+                                       class="btn btn-outline-primary btn-sm"
+                                       download>
+                                        ⬇️ Télécharger
+                                    </a>
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <div class="alert alert-info">
+                    Aucun document pour ce dossier.
+                </div>
+
+            {% endif %}
+
+            <hr>
+
+            <!-- ===================== -->
+            <!-- ⚙️ ACTIONS -->
+            <!-- ===================== -->
+            <div class="d-flex justify-content-between">
+
+                <a href="{% url 'mes_dossiers' %}" class="btn btn-secondary">
+                    Retour
+                </a>
+
+                <div class="d-flex gap-2">
+
+                    {% if user.is_staff %}
+
+                        {% if dossier.statut != "approuve" %}
+                            <a href="{% url 'dossier_valider' dossier.pk %}"
+                               class="btn btn-success">
+                                ✅ Valider
+                            </a>
+                        {% endif %}
+
+                        {% if dossier.statut != "rejete" %}
+                            <a href="{% url 'dossier_refuser' dossier.pk %}"
+                               class="btn btn-danger">
+                                ❌ Refuser
+                            </a>
+                        {% endif %}
+
+                    {% endif %}
+
+                    {% if user == dossier.client or user.is_staff %}
+
+                        <a href="{% url 'dossier_download' dossier.pk %}"
+                           class="btn btn-primary">
+                            ⬇️ Télécharger ZIP
+                        </a>
+
+                        <a href="{% url 'dossier_delete' dossier.pk %}"
+                           class="btn btn-outline-danger">
+                            🗑 Supprimer
+                        </a>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

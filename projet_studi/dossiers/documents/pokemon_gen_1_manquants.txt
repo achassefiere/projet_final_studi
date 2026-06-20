@@ -1,0 +1,10 @@
+pokemon gen 1 manquants :
+-rafflesia (dracaufeu) 150
+-parasect (Pikachu) 70
+-grolem (Pikachu) 150
+-smogogo (mewtwo) 150
+-metamorph (mewtwo) 150
+
+dracaufeu : 1
+Pikachu : 2
+mewtwo : 2

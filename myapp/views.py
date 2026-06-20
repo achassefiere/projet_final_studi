@@ -1,24 +1,46 @@
+import zipfile, logging
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpRequest, HttpResponse, Http404
 from django.template import loader
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import user_passes_test
 from django.utils import timezone
 from django.core.paginator import Paginator
 from .forms import *
 from .models import *
 from datetime import datetime
+from io import BytesIO
+from .services import *
+from .constants import *
+
+
+logger = logging.getLogger(__name__)
+
+def is_admin(user):
+    return user.is_staff
 
 # Page d'accueil du site
-def accueil_view(request):
-    prochaines_epreuves = Epreuve.objects.filter(
-        date__gte=datetime.now()
-    ).order_by('date', 'heure')[:3]
+def home_view(request):
 
-    return render(request, 'accueil.html', {
-        'prochaines_epreuves': prochaines_epreuves
+    vehicules_recents = Vehicule.objects.all()[:6]
+
+    dossiers_user = None
+    dossiers_admin = None
+
+    if request.user.is_authenticated:
+
+        if request.user.is_staff:
+            dossiers_admin = Dossier.objects.select_related("vehicule", "client") \
+                                           .order_by("-created_at")[:3]
+        else:
+            dossiers_user = Dossier.objects.filter(client=request.user)
+
+    return render(request, "accueil.html", {
+        "vehicules_recents": vehicules_recents,
+        "dossiers_user": dossiers_user,
+        "dossiers_admin": dossiers_admin,
     })
 
 # Connexion d'un utilisateur
@@ -61,135 +83,326 @@ def deconnexion_view(request):
     logout(request)
     return redirect('accueil')
 
-# Création d'une épreuve
-def creer_epreuve(request):
-    if request.method == 'POST':
-        form = CreateEpreuveForm(request.POST)
+@login_required
+def vehicule_create(request):
+    if request.method == "POST":
+        form = VehiculeForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            messages.success(request, "✅ Épreuve créée avec succès.")
-            return redirect('liste_epreuves')  # ou autre vue de ton choix
+            return redirect("vehicule_list")
     else:
-        form = CreateEpreuveForm()
-    return render(request, 'creer_epreuve.html', {'form': form})
+        form = VehiculeForm()
 
-# Modification d'une épreuve
-def editer_epreuve(request, epreuve_id):
-    epreuve = get_object_or_404(Epreuve, id=epreuve_id)
+    return render(request, "vehicule_form.html", {
+        "form": form,
+        "title": "Créer un véhicule"
+    })
+    
+@login_required
+def vehicule_update(request, pk):
+    vehicule = get_object_or_404(Vehicule, pk=pk)
 
-    if request.method == 'POST':
-        form = CreateEpreuveForm(request.POST, instance=epreuve)
+    if request.method == "POST":
+        form = VehiculeForm(
+            request.POST,
+            request.FILES,
+            instance=vehicule
+        )
+
         if form.is_valid():
             form.save()
-            messages.success(request, "✅ Épreuve modifiée avec succès.")
-            return redirect('liste_epreuves')
+            return redirect("vehicule_list")
+
     else:
-        form = CreateEpreuveForm(instance=epreuve)
+        form = VehiculeForm(instance=vehicule)
 
-    return render(request, 'editer_epreuve.html', {'form': form, 'epreuve': epreuve})
+    return render(request, "vehicule_form.html", {
+        "form": form,
+        "vehicule": vehicule,
+    })
 
-# Accès a la liste des épreuves avec pagination
-def liste_epreuves(request):
-    epreuves_list = Epreuve.objects.all().order_by('date', 'heure')
-    paginator = Paginator(epreuves_list, 10)  # 🔹 10 résultats par page
+def vehicule_delete(request, pk):
+    vehicule = get_object_or_404(Vehicule, pk=pk)
 
-    page_number = request.GET.get('page')
-    epreuves = paginator.get_page(page_number)
+    if request.method == "POST":
+        vehicule.delete()
+        return redirect("vehicule_list")
 
-    return render(request, 'liste_epreuves.html', {'epreuves': epreuves})
+    return render(request, "vehicule_confirm_delete.html", {"vehicule": vehicule})
 
-# Accès au détail d'une épreuve
-def detail_epreuve(request, epreuve_id):
-    epreuve = get_object_or_404(Epreuve, id=epreuve_id)
-    return render(request, 'detail_epreuve.html', {'epreuve': epreuve})
-
-# Suppression d'une épreuve
-def supprimer_epreuve(request, epreuve_id):
-    epreuve = get_object_or_404(Epreuve, id=epreuve_id)
+def vehicule_list(request):
     
-    if request.method == 'POST':
-        epreuve.delete()  # supprime l'épreuve et tous les tickets liés
-        return redirect('liste_epreuves')
+    mode = request.GET.get("mode")
+    vehicules = Vehicule.objects.all().order_by("-created_at")
+
+    if mode:
+        vehicules = vehicules.filter(mode=mode)
+
+    paginator = Paginator(vehicules, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, "vehicule_list.html", {
+        "page_obj": page_obj,
+        "mode": mode
+    })
+
+def vehicule_detail(request, pk):
+    vehicule = get_object_or_404(Vehicule, pk=pk)
+    form = VehiculeForm(instance=vehicule)
+
+    for field in form.fields.values():
+        field.disabled = True
+
+    return render(request, "vehicule_detail.html", {
+        "form": form,
+        "vehicule": vehicule,
+        "readonly": True
+    })
+
+
+@login_required
+def dossier_create(request, vehicule_id):
+
+    vehicule = get_object_or_404(Vehicule, pk=vehicule_id)
+
+    if vehicule.statut != Vehicule.STATUT_DISPONIBLE:
+        return render(request, "error.html", {
+            "message": "Ce véhicule n'est plus disponible."
+        })
+
+    form = DossierForm(request.POST or None)
+
+    print("METHOD:", request.method)
+
+    if request.method == "POST":
+        print("FORM VALID:", form.is_valid())
+        print("ERRORS:", form.errors)
+
+    if request.method == "POST" and form.is_valid():
+
+        dossier = form.save(commit=False)
+
+        # 👇 IMPORTANT : type dossier (corrige ton bug "Type vide")
+        dossier.dossier_type = (
+            Dossier.TYPE_LOCATION
+            if vehicule.mode == "location"
+            else Dossier.TYPE_ACHAT
+        )
+
+        dossier.client = request.user
+        dossier.vehicule = vehicule
+        dossier.statut = Dossier.STATUT_SOUMIS
+        dossier.submitted_at = timezone.now()
+
+        dossier.save()
+
+        # 🔗 ManyToMany
+        options = form.cleaned_data.get("location_options") or []
+        dossier.location_options.set(options)
+
+        return redirect("upload_document", dossier_id=dossier.pk)
+
+    return render(request, "dossier_form.html", {
+        "form": form,
+        "vehicule": vehicule
+    })
     
-    return redirect('liste_epreuves')
+@login_required
+def mes_dossiers(request):
+    dossiers = Dossier.objects.filter(client=request.user)
 
-# Formulaire d'achat d'un, de deux ou de quatre tickets
-def acheter_ticket(request, epreuve_id):
-    epreuve = get_object_or_404(Epreuve, id=epreuve_id)
+    return render(request, "mes_dossiers.html", {
+        "dossiers": dossiers
+    })
 
-    # Vérifie si l’utilisateur a déjà acheté un ticket pour cette épreuve
-    already_bought = Ticket.objects.filter(user=request.user, epreuve=epreuve).exists()
 
-    total = None
-    form = None
+@login_required
+def upload_document(request, dossier_id):
 
-    if already_bought:
-        messages.warning(request, "Vous avez déjà acheté des tickets pour cette épreuve.")
+    dossier = get_object_or_404(Dossier, pk=dossier_id)
+    documents = dossier.documents.all()
+
+    if request.method == "POST":
+
+        form = DossierDocumentForm(request.POST, request.FILES)
+
+        if form.is_valid():
+
+            document_type = form.cleaned_data["document_type"]
+
+            # 🔒 limite 1 type par dossier
+            if documents.filter(document_type=document_type).exists():
+                form.add_error("document_type", "Ce type de document existe déjà.")
+
+            # 🔒 max 5 documents
+            elif documents.count() >= 5:
+                form.add_error(None, "Maximum 5 documents atteints.")
+
+            else:
+                doc = form.save(commit=False)
+                doc.dossier = dossier   # 🔥 liaison obligatoire
+                doc.save()
+                
+                print("DOC ID:", doc.id)
+                print("DOSSIER ID:", doc.dossier_id)
+                print("DOSSIER OBJ:", dossier.id)
+
+                return redirect("upload_document", dossier_id=dossier.pk)
+
     else:
-        form = BuyTicketForm(request.POST or None)
+        form = DossierDocumentForm()
 
-        if request.method == 'POST' and form.is_valid():
-            ticket = form.save(commit=False)
-            ticket.user = request.user
-            ticket.epreuve = epreuve
-
-            # Valide uniquement la quantité sans exécuter full_clean complet
-            ticket.clean()  # vérifie que la quantité = 1,2 ou 4
-
-            # Génération et sauvegarde du code unique dans save()
-            ticket.save()
-
-            total = ticket.total
-            messages.success(
-                request,
-                f"Achat réussi ! Vous avez acheté {ticket.quantite} billet{'s' if ticket.quantite > 1 else ''} "
-                f"pour un total de {total:.2f} €."
-            )
-
-            # Redirige vers la page des billets
-            return redirect('liste_tickets')
-
-    context = {
-        'form': form,
-        'epreuve': epreuve,
-        'total': total,
-        'already_bought': already_bought,
-    }
-
-    return render(request, 'acheter_ticket.html', context)
-
-# Accès a la liste des tickets de l'utilisateur avec pagination
-def liste_tickets(request):
-    tickets_list = Ticket.objects.filter(user=request.user).order_by('-date_achat')
-
-    # Création du paginateur
-    paginator = Paginator(tickets_list, 10)  # 10 tickets par page
-    page_number = request.GET.get('page')
-    tickets = paginator.get_page(page_number)
-
-    return render(request, 'liste_tickets.html', {'tickets': tickets})
-
-# Accès a la liste de tous les tickets avec pagination
-def liste_tickets_admin(request):
-    # Seuls les admins peuvent voir tous les tickets
-    if not request.user.is_staff:
-        messages.error(request, "Accès refusé. Cette page est réservée aux administrateurs.")
-        return redirect('accueil')
-
-    # Récupération de tous les tickets avec jointures
-    tickets_list = Ticket.objects.select_related('user', 'epreuve').order_by('-date_achat')
-
-    # Pagination - 10 tickets par page
-    paginator = Paginator(tickets_list, 10)
-    page_number = request.GET.get('page')
-    tickets = paginator.get_page(page_number)
-
-    return render(request, 'liste_tickets_admin.html', {'tickets': tickets})
-
-# Suppression d'une épreuve
-def supprimer_ticket(request, ticket_id):
-    ticket = get_object_or_404(Ticket, id=ticket_id)
+    return render(request, "upload_document.html", {
+        "form": form,
+        "dossier": dossier,
+        "documents": documents,
+    })
     
-    if request.method == 'POST':
-        ticket.delete()  # supprime l'épreuve et tous les tickets liés
-        return redirect('liste_tickets_admin')
+@login_required
+def document_valider(request, pk):
+
+    dossier = get_object_or_404(Dossier, pk=pk)
+
+    # 🔒 sécurité accès
+    if request.user != dossier.client and not request.user.is_staff:
+        return redirect("accueil")
+
+    # 📎 vérifie documents liés au dossier
+    if not dossier.documents.exists():
+        return redirect("upload_document", dossier_id=dossier.pk)
+
+    # 🔥 validation
+    dossier.statut = Dossier.STATUT_SOUMIS
+    dossier.save()
+
+    return redirect("mes_dossiers")
+    
+@login_required
+def dossier_detail(request, pk):
+
+    dossier = get_object_or_404(Dossier, pk=pk)
+
+    # 🔒 sécurité : client OU admin uniquement
+    if not request.user.is_staff and dossier.client != request.user:
+        return redirect("accueil")
+
+    # 📎 récupération des documents liés
+    documents = dossier.documents.all()
+
+    return render(request, "dossier_detail.html", {
+        "dossier": dossier,
+        "documents": documents
+    })
+    
+@user_passes_test(is_admin)
+def dossier_list(request):
+
+    statut = request.GET.get("statut")
+
+    dossiers = Dossier.objects.all().order_by("-created_at")  # tri par date DESC
+
+    if statut:
+        dossiers = dossiers.filter(statut=statut)
+
+    # PAGINATION (10 par page)
+    paginator = Paginator(dossiers, 10)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, "dossier_list.html", {
+        "page_obj": page_obj,
+        "statut": statut
+    })
+
+@user_passes_test(is_admin)
+def dossier_valider(request, pk):
+
+    dossier = get_object_or_404(Dossier, pk=pk)
+
+    # 🔥 Mise à jour dossier
+    dossier.statut = Dossier.STATUT_APPROUVE
+    dossier.decided_at = timezone.now()
+    dossier.reviewed_by = request.user
+    dossier.save()
+
+    # 🚗 mise à jour véhicule (disponible / indisponible)
+    update_vehicule_status(dossier.vehicule)
+
+    return redirect("dossier_list")
+
+@user_passes_test(is_admin)
+def dossier_refuser(request, pk):
+
+    dossier = get_object_or_404(Dossier, pk=pk)
+
+    # 🔥 Mise à jour dossier
+    dossier.statut = Dossier.STATUT_REJETE
+    dossier.decided_at = timezone.now()
+    dossier.reviewed_by = request.user
+    dossier.save()
+
+    # 🚗 mise à jour véhicule
+    update_vehicule_status(dossier.vehicule)
+
+    # 🔔 NOTIFICATION CLIENT
+    Notification.objects.create(
+        user=dossier.client,
+        title="Dossier refusé",
+        message="Votre dossier a été refusé.",
+        type="error"
+    )
+
+    return redirect("dossier_list")
+
+@login_required
+def dossier_delete(request, pk):
+
+    dossier = get_object_or_404(Dossier, pk=pk)
+
+    # 🔒 sécurité
+    if request.user != dossier.client and not request.user.is_staff:
+        return redirect("accueil")
+
+    vehicule = dossier.vehicule
+
+    if request.method == "POST":
+        dossier.delete()
+
+        # 🔥 recalcul statut véhicule
+        from .services import update_vehicule_status
+        update_vehicule_status(vehicule)
+
+        return redirect("mes_dossiers")
+
+    return render(request, "dossier_confirm_delete.html", {
+        "dossier": dossier
+    })
+    
+@login_required
+def download_dossier(request, dossier_id):
+
+    dossier = get_object_or_404(Dossier, pk=dossier_id)
+
+    # sécurité : client ou staff uniquement
+    if request.user != dossier.client and not request.user.is_staff:
+        return HttpResponse("Accès interdit", status=403)
+
+    buffer = BytesIO()
+
+    with zipfile.ZipFile(buffer, "w") as zip_file:
+
+        for doc in dossier.documents.all():
+
+            if doc.file:
+                zip_file.writestr(
+                    doc.file.name.split("/")[-1],
+                    doc.file.read()
+                )
+
+    buffer.seek(0)
+
+    response = HttpResponse(buffer, content_type="application/zip")
+    response["Content-Disposition"] = f'attachment; filename="dossier_{dossier.id}.zip"'
+
+    return response

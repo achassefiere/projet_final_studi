@@ -2,6 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from .models import *
+from .constants import *
 
 User = get_user_model()
 
@@ -56,12 +57,15 @@ class SignupForm(forms.ModelForm):
         return email
 
     # Validation des deux mots de passe s'ils sont identiques
-    def validate_password(self):
-        password1 = self.cleaned_data.get('password1')
-        password2 = self.cleaned_data.get('password2')
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get("password1")
+        password2 = cleaned_data.get("password2")
+
         if password1 and password2 and password1 != password2:
             raise ValidationError("Les deux mots de passe ne correspondent pas.")
-        return password2
+
+        return cleaned_data
     
     # Sauvegarde de l'utilisateur 
     def save(self, commit=True):
@@ -72,58 +76,79 @@ class SignupForm(forms.ModelForm):
         return user
         
 
-class CreateEpreuveForm(forms.ModelForm):
-    
-    genre = forms.ChoiceField(
-        choices=Epreuve.GENRE_CHOICES,  # attention ici
-        widget=forms.RadioSelect
-    )
+class VehiculeForm(forms.ModelForm):
 
     class Meta:
-        model = Epreuve
-        fields = ['date', 'heure', 'genre', 'discipline', 'competition', 'tarif', 'lieu']
+        model = Vehicule
+        fields = [
+            "marque",
+            "modele",
+            "motorisation",
+            "annee",
+            "kilometrage",
+            "numero_vin",
+            "mode",
+            "prix_vente",
+            "loyer_mensuel",
+            "statut",
+            "photo",
+        ]
+
         widgets = {
-            'date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'heure': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
-            'discipline': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Ex : Athlétisme, Natation, Cyclisme'
-            }),
-            'competition': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Ex : Finale Femme 200m nage libre'
-            }),
-            'tarif': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'step': '0.01',
-                'min': '0'
-            }),
-            'lieu': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Ex : Stade de France, Piscine Olympique, etc.'
-            }),
+            "marque": forms.TextInput(attrs={"class": "form-control"}),
+            "modele": forms.TextInput(attrs={"class": "form-control"}),
+            "motorisation": forms.TextInput(attrs={"class": "form-control"}),
+            "annee": forms.NumberInput(attrs={"class": "form-control"}),
+            "kilometrage": forms.NumberInput(attrs={"class": "form-control"}),
+            "numero_vin": forms.TextInput(attrs={"class": "form-control"}),
+            "mode": forms.Select(attrs={"class": "form-select"}),
+            "prix_vente": forms.NumberInput(attrs={"class": "form-control"}),
+            "loyer_mensuel": forms.NumberInput(attrs={"class": "form-control"}),
+            "statut": forms.Select(attrs={"class": "form-select"}),
+            "photo": forms.ClearableFileInput(attrs={"class": "form-control"}),
         }
         
-class BuyTicketForm(forms.ModelForm):
-    # constante interne à la classe
-    QUANTITE_CHOICES = [
-        (1, "1 ticket"),
-        (2, "2 tickets"),
-        (4, "4 tickets"),
-    ]
+class DossierForm(forms.ModelForm):
 
-    quantite = forms.ChoiceField(
-        choices=QUANTITE_CHOICES,
-        label="Nombre de tickets",
-        widget=forms.Select(attrs={"class": "form-select"})
+    location_options = forms.ModelMultipleChoiceField(
+        queryset=OptionLocation.objects.filter(is_active=True),
+        required=False,
+        widget=forms.CheckboxSelectMultiple
     )
 
     class Meta:
-        model = Ticket
-        fields = ['quantite']
+        model = Dossier
+        fields = [
+            "location_duration_months",
+            "location_options",
+            "client_notes",
+        ]
+        
+class DossierDocumentForm(forms.ModelForm):
 
-    def clean_quantite(self):
-        quantite = int(self.cleaned_data.get('quantite'))
-        if quantite not in [1, 2, 4]:
-            raise forms.ValidationError("Vous pouvez acheter uniquement 1, 2 ou 4 tickets.")
-        return quantite
+    class Meta:
+        model = DossierDocument
+        fields = ["document_type", "file", "label"]
+
+    def __init__(self, *args, **kwargs):
+        dossier = kwargs.pop("dossier", None)
+        super().__init__(*args, **kwargs)
+
+        base_choices = DossierDocument.TYPE_CHOICES
+
+        if dossier:
+            already_uploaded = dossier.documents.values_list(
+                "document_type",
+                flat=True
+            )
+
+            filtered = [
+                c for c in base_choices
+                if c[0] not in already_uploaded
+            ]
+            
+            print("DEBUG already_uploaded:", list(already_uploaded))
+            print("DEBUG choices:", filtered)
+
+            # 🔥 IMPORTANT : jamais vide
+            self.fields["document_type"].choices = filtered or base_choices

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-5">
+
+    <h2>📁 Mes dossiers</h2>
+
+    {% if dossiers %}
+
+        <div class="row mt-4">
+
+            {% for dossier in dossiers %}
+
+                <div class="col-md-4 mb-3">
+
+                    <div class="card shadow-sm h-100">
+
+                        <div class="card-body">
+
+                            <h5 class="card-title">
+                                🚗 {{ dossier.vehicule.marque }} {{ dossier.vehicule.modele }}
+                            </h5>
+
+                            <p class="card-text">
+                                📌 Type : {{ dossier.get_dossier_type_display }}<br>
+                                📊 Statut : {{ dossier.get_statut_display }}<br>
+                                📅 {{ dossier.created_at|date:"d/m/Y" }}
+                            </p>
+
+                            <a href="{% url 'dossier_detail' dossier.pk %}"
+                            class="btn btn-primary btn-sm">
+                                Voir
+                            </a>
+
+                            <a href="{% url 'dossier_delete' dossier.pk %}"
+                            class="btn btn-danger btn-sm"
+                            onclick="return confirm('Supprimer ce dossier ?')">
+                                Supprimer
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <p>📭 Vous n’avez aucun dossier pour le moment.</p>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

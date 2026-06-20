@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h2>Déposer un dossier</h2>
+
+    <div class="card shadow-sm mt-3">
+        <div class="card-body">
+
+            <form method="post">
+                {% csrf_token %}
+
+                <!-- Véhicule -->
+                <div class="mb-3">
+                    <label class="form-label">Véhicule</label>
+
+                    <div class="form-control bg-light">
+                        {{ vehicule.marque }} {{ vehicule.modele }}
+                    </div>
+                </div>
+
+                <!-- Type dossier (info uniquement) -->
+                <div class="mb-3">
+                    <label class="form-label">Mode</label>
+                    <div class="form-control bg-light">
+                        {{ vehicule.get_mode_display }}
+                    </div>
+                </div>
+
+                <!-- Durée (si location uniquement) -->
+                {% if vehicule.mode == "location" %}
+                    <div class="mb-3">
+                        <label class="form-label">Durée (mois)</label>
+                        {{ form.location_duration_months }}
+                        {{ form.location_duration_months.errors }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Options de location</label>
+
+                        <div class="border rounded p-3 bg-light">
+                            {{ form.location_options }}
+                        </div>
+
+                        <small class="text-muted">
+                            Vous pouvez sélectionner jusqu'à 4 options.
+                        </small>
+                    </div>
+
+                    
+                {% endif %}
+
+                <!-- Notes -->
+                <div class="mb-3">
+                    <label class="form-label">Notes</label>
+                    {{ form.client_notes }}
+                    {{ form.client_notes.errors }}
+                </div>
+
+                <!-- SUBMIT -->
+                <button type="submit" class="btn btn-primary">
+                    Envoyer le dossier
+                </button>
+
+                <a href="{% url 'vehicule_list' %}" class="btn btn-secondary">
+                    Retour
+                </a>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
