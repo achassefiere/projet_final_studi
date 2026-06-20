@@ -75,31 +75,17 @@ DATABASES = {
 }
 
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': config('DB_NAME', default='antoinec$default'),  # Nom de la base sur PythonAnywhere
-#         'USER': config('DB_USER', default='antoinec'),          # Ton nom d'utilisateur PythonAnywhere
-#         'PASSWORD': config('DB_PASSWORD', default='123+aze!'),  # Ton mot de passe MySQL
-#         'HOST': config('DB_HOST', default='antoinec.mysql.pythonanywhere-services.com'),
-#         'PORT': config('DB_PORT', default='3306'),
-#         'OPTIONS': {
-#             'init_command': 'SET default_storage_engine=INNODB',
-#         },
-#     }
-# }
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'OPTIONS' : {
+        'NAME': config('DB_NAME', default='antoinec$default'),  # Nom de la base sur PythonAnywhere
+        'USER': config('DB_USER', default='antoinec'),          # Ton nom d'utilisateur PythonAnywhere
+        'PASSWORD': config('DB_PASSWORD', default='123+aze!'),  # Ton mot de passe MySQL
+        'HOST': config('DB_HOST', default='antoinec.mysql.pythonanywhere-services.com'),
+        'PORT': config('DB_PORT', default='3306'),
+        'OPTIONS': {
             'init_command': 'SET default_storage_engine=INNODB',
         },
-        'NAME': 'projet_studi_db',
-        'USER' : 'root',
-        'PASSWORD' : '123+Aze!', 
-        'HOST' : 'localhost',
-        'PORT' : '3306',
     }
 }
 
