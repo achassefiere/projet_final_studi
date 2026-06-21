@@ -2,6 +2,9 @@ from pathlib import Path
 import os
 from decouple import config
 import dj_database_url
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -174,3 +177,16 @@ LOGGING = {
         },
     },
 }
+
+sentry_sdk.init(
+    dsn="https://abfdbaa8b387ef9017099afb8da71d11@o4511604308836352.ingest.de.sentry.io/4511604313030736",
+    # Add data like request headers and IP for users,
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii=True,
+    # Enable sending logs to Sentry
+    enable_logs=True,
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for tracing.
+    traces_sample_rate=1.0,
+    integrations=[DjangoIntegration()],
+)
