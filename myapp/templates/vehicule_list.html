@@ -72,13 +72,13 @@
 
                                 <td class="text-end">
 
-                                    <!-- 🔵 Tout le monde peut voir -->
+                                    <!-- tout le monde -->
                                     <a href="{% url 'vehicule_detail' vehicule.pk %}"
                                        class="btn btn-sm btn-outline-primary">
                                         Voir
                                     </a>
 
-                                    <!-- 🔴 Seulement staff -->
+                                    <!-- staff only -->
                                     {% if user.is_authenticated and user.is_staff %}
 
                                         <a href="{% url 'vehicule_update' vehicule.pk %}"

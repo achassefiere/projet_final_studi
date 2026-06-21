@@ -11,7 +11,7 @@
             <form method="post">
                 {% csrf_token %}
 
-                <!-- Véhicule -->
+                <!-- VEHICULE -->
                 <div class="mb-3">
                     <label class="form-label">Véhicule</label>
 
@@ -20,7 +20,7 @@
                     </div>
                 </div>
 
-                <!-- Type dossier (info uniquement) -->
+                <!-- TYPE DOSSIER INFO -->
                 <div class="mb-3">
                     <label class="form-label">Mode</label>
                     <div class="form-control bg-light">
@@ -28,7 +28,7 @@
                     </div>
                 </div>
 
-                <!-- Durée (si location uniquement) -->
+                <!--DUREE SI LOCATION UNIQUEMENT -->
                 {% if vehicule.mode == "location" %}
                     <div class="mb-3">
                         <label class="form-label">Durée (mois)</label>
@@ -50,7 +50,7 @@
                     
                 {% endif %}
 
-                <!-- Notes -->
+                <!-- NOTES -->
                 <div class="mb-3">
                     <label class="form-label">Notes</label>
                     {{ form.client_notes }}

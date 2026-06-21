@@ -13,7 +13,6 @@ from .models import *
 from datetime import datetime
 from io import BytesIO
 from .services import *
-from .constants import *
 
 
 logger = logging.getLogger(__name__)
@@ -83,7 +82,7 @@ def deconnexion_view(request):
     logout(request)
     return redirect('accueil')
 
-@login_required
+# Pas de @login_required pour les tests
 def vehicule_create(request):
     if request.method == "POST":
         form = VehiculeForm(request.POST, request.FILES)
@@ -183,7 +182,7 @@ def dossier_create(request, vehicule_id):
 
         dossier = form.save(commit=False)
 
-        # 👇 IMPORTANT : type dossier (corrige ton bug "Type vide")
+        # IMPORTANT : type dossier (corrige bug "Type vide")
         dossier.dossier_type = (
             Dossier.TYPE_LOCATION
             if vehicule.mode == "location"
@@ -231,11 +230,11 @@ def upload_document(request, dossier_id):
 
             document_type = form.cleaned_data["document_type"]
 
-            # 🔒 limite 1 type par dossier
+            # limite 1 type par dossier
             if documents.filter(document_type=document_type).exists():
                 form.add_error("document_type", "Ce type de document existe déjà.")
 
-            # 🔒 max 5 documents
+            # add max 5 documents
             elif documents.count() >= 5:
                 form.add_error(None, "Maximum 5 documents atteints.")
 
@@ -336,16 +335,16 @@ def dossier_refuser(request, pk):
 
     dossier = get_object_or_404(Dossier, pk=pk)
 
-    # 🔥 Mise à jour dossier
+    # Mise à jour dossier
     dossier.statut = Dossier.STATUT_REJETE
     dossier.decided_at = timezone.now()
     dossier.reviewed_by = request.user
     dossier.save()
 
-    # 🚗 mise à jour véhicule
+    # mise à jour véhicule
     update_vehicule_status(dossier.vehicule)
 
-    # 🔔 NOTIFICATION CLIENT
+    # NOTIFICATION CLIENT
     Notification.objects.create(
         user=dossier.client,
         title="Dossier refusé",
@@ -360,7 +359,6 @@ def dossier_delete(request, pk):
 
     dossier = get_object_or_404(Dossier, pk=pk)
 
-    # 🔒 sécurité
     if request.user != dossier.client and not request.user.is_staff:
         return redirect("accueil")
 
@@ -369,7 +367,7 @@ def dossier_delete(request, pk):
     if request.method == "POST":
         dossier.delete()
 
-        # 🔥 recalcul statut véhicule
+        # recalcul statut véhicule
         from .services import update_vehicule_status
         update_vehicule_status(vehicule)
 

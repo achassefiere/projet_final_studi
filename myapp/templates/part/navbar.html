@@ -22,7 +22,7 @@
 
                 {% if user.is_authenticated %}
 
-                    <!-- 🔵 CLIENT -->
+                    <!-- CLIENT -->
                     {% if not user.is_staff %}
 
                         <li class="nav-item">
@@ -39,7 +39,7 @@
 
                     {% endif %}
 
-                    <!-- 🔴 ADMIN -->
+                    <!-- ADMIN -->
                     {% if user.is_staff %}
 
                         <li class="nav-item">
@@ -68,7 +68,7 @@
 
                     {% endif %}
 
-                    <!-- USER -->
+                    <!-- ALL USER -->
                     <li class="nav-item">
                         <span class="navbar-text fw-bold me-2">
                             Bonjour, {{ user.username }}

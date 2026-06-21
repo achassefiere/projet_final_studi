@@ -4,9 +4,7 @@
 
 <div class="container mt-4">
 
-    <!-- ===================== -->
-    <!-- 📁 HEADER DOSSIER -->
-    <!-- ===================== -->
+    <!-- HEADER DOSSIER -->
     <div class="card shadow-sm">
 
         <div class="card-header bg-warning">
@@ -17,9 +15,7 @@
 
         <div class="card-body">
 
-            <!-- ===================== -->
-            <!-- 📄 INFOS GÉNÉRALES -->
-            <!-- ===================== -->
+            <!-- INFOS GÉNÉRALES -->
             <div class="row">
 
                 <div class="col-md-6">
@@ -80,9 +76,7 @@
 
             <hr>
 
-            <!-- ===================== -->
-            <!-- 📦 OPTIONS LOCATION -->
-            <!-- ===================== -->
+            <!-- OPTIONS LOCATION -->
             {% if dossier.dossier_type == "location" %}
 
                 <h5>📦 Options de location</h5>
@@ -108,9 +102,7 @@
 
             <hr>
 
-            <!-- ===================== -->
-            <!-- 📝 NOTES -->
-            <!-- ===================== -->
+            <!-- NOTES -->
             {% if dossier.client_notes %}
 
                 <p>
@@ -122,9 +114,7 @@
 
             <hr>
 
-            <!-- ===================== -->
-            <!-- 📎 DOCUMENTS -->
-            <!-- ===================== -->
+            <!-- DOCUMENTS -->
             <h4 class="mb-3">📎 Documents</h4>
 
             {% if documents %}
@@ -182,9 +172,7 @@
 
             <hr>
 
-            <!-- ===================== -->
-            <!-- ⚙️ ACTIONS -->
-            <!-- ===================== -->
+            <!-- ACTIONS -->
             <div class="d-flex justify-content-between">
 
                 <a href="{% url 'mes_dossiers' %}" class="btn btn-secondary">

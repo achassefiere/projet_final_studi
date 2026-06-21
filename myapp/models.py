@@ -12,6 +12,9 @@ from decimal import Decimal
 class User(AbstractUser):
     pass
 
+# ──────────────────────────────────────────────
+# VEHICULE
+# ──────────────────────────────────────────────
 class Vehicule(models.Model):
 
     # Mode de commercialisation
@@ -115,7 +118,9 @@ class Vehicule(models.Model):
         self.mode = self.MODE_VENTE
         self.save(update_fields=["mode", "updated_at"])
         
-
+# ──────────────────────────────────────────────
+# OPTIONLOCATION
+# ──────────────────────────────────────────────
 class OptionLocation(models.Model):
 
     code = models.CharField(max_length=50, unique=True)

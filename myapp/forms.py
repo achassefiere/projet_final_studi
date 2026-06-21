@@ -2,7 +2,6 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from .models import *
-from .constants import *
 
 User = get_user_model()
 
@@ -150,5 +149,5 @@ class DossierDocumentForm(forms.ModelForm):
             print("DEBUG already_uploaded:", list(already_uploaded))
             print("DEBUG choices:", filtered)
 
-            # 🔥 IMPORTANT : jamais vide
+            # IMPORTANT : jamais vide
             self.fields["document_type"].choices = filtered or base_choices

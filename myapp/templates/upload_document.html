@@ -27,16 +27,14 @@
 
         <hr>
 
-        <!-- ❌ ERREURS -->
+        <!-- ERREURS -->
         {% if form.errors %}
             <div class="alert alert-danger">
                 {{ form.errors }}
             </div>
         {% endif %}
 
-        <!-- ===================== -->
-        <!-- 📤 FORM UPLOAD -->
-        <!-- ===================== -->
+        <!-- FORM UPLOAD -->
         <form method="post" enctype="multipart/form-data">
 
             {% csrf_token %}
@@ -70,10 +68,7 @@
 
         <hr>
 
-        <!-- ===================== -->
-        <!-- ✔ FORM VALIDATION -->
-        <!-- ===================== -->
-
+        <!-- FORM VALIDATION -->
         {% if documents|length >= 1 %}
 
             <form method="post" action="{% url 'document_valider' dossier.pk %}">
@@ -98,7 +93,7 @@
 
         <hr>
 
-        <!-- 📁 LISTE DOCUMENTS -->
+        <!-- LISTE DOCUMENTS -->
         <h5>Documents déposés</h5>
 
         <div class="list-group mt-3">
